@@ -32,7 +32,7 @@ func BuildDBConfig() *DbConfig {
 
 func DbUrl() string {
 	dbConfig := BuildDBConfig()
-	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s",
+	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=%s",
 		dbConfig.Host,
 		dbConfig.User,
 		dbConfig.Pass,

@@ -2,11 +2,10 @@ package Models
 
 import (
 	"time"
-	"github.com/google/uuid"
 )
 
 type RestDate struct {
-	RestID uuid.UUID
+	ID uint64 `gorm: AUTO_INCREMENT;`
 	Name string `gorm:"not null;"`
 	Date time.Time `gorm:"not null;"`
 	Subject string `gorm:"not null;"`

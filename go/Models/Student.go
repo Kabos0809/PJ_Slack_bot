@@ -1,15 +1,14 @@
 package Models
 
 import (
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 //IDから生徒情報取得
-func GetStudentbyID(id uuid.UUID, db *gorm.DB) (*Student, error) {
+func GetStudentbyID(id uint64, db *gorm.DB) (*Student, error) {
 	var student *Student
-	tx := db.Preload("RestDates").Begin()
-	if err := tx.Where("student_id = ?", id).First(student).Error; err != nil {
+	tx := db.Begin()
+	if err := tx.Where("id = ?", id).First(student).Error; err != nil {
 		tx.Rollback()
 		return student, err
 	}
@@ -33,8 +32,8 @@ func CreateStudent(student *Student, school *School, db *gorm.DB) error {
 
 //生徒情報の削除
 func DeleteStudent(student *Student, school *School, db *gorm.DB) error {
-	tx := db.Preload("RestDate").Begin()
-	if err := tx.Where("student_id = ?", student.StudentID).Delete(&Student{}).Error; err != nil {
+	tx := db.Begin()
+	if err := tx.Where("id = ?", student.ID).Delete(&Student{}).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -105,7 +104,7 @@ func DeleteRestFromStudent(student *Student, rdate *RestDate, db *gorm.DB) error
 }
 
 //振替回数を返す
-func TransferCount(studentID uuid.UUID, db *gorm.DB) (*TransferCounts, error) {
+func TransferCount(studentID uint64, db *gorm.DB) (*TransferCounts, error) {
 	student, err := GetStudentbyID(studentID, db)
 	if err != nil {
 		return nil, err

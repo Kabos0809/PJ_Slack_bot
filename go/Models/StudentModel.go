@@ -1,15 +1,11 @@
 package Models
 
-import "github.com/google/uuid"
-
 type Student struct {
-	StudentID uuid.UUID `gorm:"primaryKey; type:uuid; default:uuid_generate_v4();`
+	ID uint64 `gorm:"AUTO_INCREMENT;"`
 	FirstName string `gorm:"not null;" binding:"required"`
 	LastName string `gorm:"not null;" binding:"required"`
 	Name string `gorm:"not null;" binding:"required"`
 	Grade string `gorm:"not null;" binding:"required"`
-	SchoolID uuid.UUID `gorm:"type:uuid;"`
-	RestDates []RestDate `gorm:"foreignKey: RestID; references:StudentID"`
 	//振替予定のリストはリリース後拡張予定
 	//Schedules []TransferSchedules `gorm:"foreignKey: ID"`
 	MathCounts uint64 `gorm:"not null; default: 0;"`

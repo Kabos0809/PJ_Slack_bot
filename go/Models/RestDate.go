@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"gorm.io/gorm"
-	"github.com/google/uuid"
 )
 
 //以下二つはWebページに対応した場合に使うかも
@@ -21,7 +20,7 @@ func GetAllRestDate() (*[]RestDate, error) {
 }
 */
 
-func GetRestDatebyID(id uuid.UUID, db *gorm.DB) (*RestDate, error) {
+func GetRestDatebyID(id uint64, db *gorm.DB) (*RestDate, error) {
 	var restdate *RestDate
 	tx := db.Begin()
 	if err := tx.Where("id = ?", id).First(restdate).Error; err != nil {
@@ -51,7 +50,7 @@ func CreateRestDate(rdate *RestDate, student *Student, db *gorm.DB) error {
 }
 
 //休んだ日の削除
-func DeleteRestDate(id uuid.UUID, db *gorm.DB) error {
+func DeleteRestDate(id uint64, db *gorm.DB) error {
 	tx := db.Begin()
 	restdate, err := GetRestDatebyID(id, db)
 	if err != nil {
@@ -67,7 +66,7 @@ func DeleteRestDate(id uuid.UUID, db *gorm.DB) error {
 		tx.Rollback()
 		return err
 	}
-	if err := tx.Where("rest_id = ?", id).Delete(&RestDate{}).Error; err != nil {
+	if err := tx.Where("id = ?", id).Delete(&RestDate{}).Error; err != nil {
 		tx.Rollback()
 		return err
 	}

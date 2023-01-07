@@ -1,10 +1,7 @@
 package Models
 
-import "github.com/google/uuid"
-
 type School struct {
-	SchoolID uuid.UUID `gorm:"primaryKey; type:uuid; default:uuid_generate_v4();"`
-	Students []Student `gorm:"foreignKey: SchoolID references: SchoolID default: nil"`
+	ID uint64 `gorm:"AUTO_INCREMENT;"`
 	Name string `gorm:"not null;"`
 }
 

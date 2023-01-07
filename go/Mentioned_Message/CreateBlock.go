@@ -35,7 +35,7 @@ func createSelectBlock4Teachers(db *gorm.DB) slack.MsgOption {
 	school_opt := make([]*slack.OptionBlockObject, 0, len(*schools))
 	for _, v := range *schools {
 		optText := slack.NewTextBlockObject("plain_text", v.Name, false, false)
-		school_opt = append(school_opt, slack.NewOptionBlockObject(v.SchoolID.String(), nil, optText))
+		school_opt = append(school_opt, slack.NewOptionBlockObject(string(v.ID), nil, optText))
 	}
 
 	s_placeholder := slack.NewTextBlockObject("plain_text", "学校を選択してください", false, false)
