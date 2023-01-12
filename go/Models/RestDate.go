@@ -2,15 +2,13 @@ package Models
 
 import (
 	"errors"
-
-	"gorm.io/gorm"
 )
 
 //以下二つはWebページに対応した場合に使うかも
 /*
-func GetAllRestDate() (*[]RestDate, error) {
+func (m Model) GetAllRestDate() (*[]RestDate, error) {
 	var restdates []RestDate
-	tx := db.Begin()
+	tx := m.Db.Begin()
 	if err := tx.Find(&restdates).Error; err != nil {
 		tx.Rollback()
 		return &restdates, err
@@ -20,9 +18,9 @@ func GetAllRestDate() (*[]RestDate, error) {
 }
 */
 
-func GetRestDatebyID(id uint64, db *gorm.DB) (*RestDate, error) {
+func (m Model) GetRestDatebyID(id uint64) (*RestDate, error) {
 	var restdate *RestDate
-	tx := db.Begin()
+	tx := m.Db.Begin()
 	if err := tx.Where("id = ?", id).First(restdate).Error; err != nil {
 		tx.Rollback()
 		return nil, err
@@ -32,8 +30,8 @@ func GetRestDatebyID(id uint64, db *gorm.DB) (*RestDate, error) {
 }
 
 //休んだ日の登録
-func CreateRestDate(rdate *RestDate, student *Student, db *gorm.DB) error {
-	tx := db.Begin()
+func (m Model) CreateRestDate(rdate *RestDate) error {
+	tx := m.Db.Begin()
 	if rdate.Subject != "国語" && rdate.Subject != "数学" && rdate.Subject != "英語" {
 		err := errors.New("[ERROR] Subjects must be Japanese, Mathematics or English.")
 		return err
@@ -42,30 +40,14 @@ func CreateRestDate(rdate *RestDate, student *Student, db *gorm.DB) error {
 		tx.Rollback()
 		return err
 	}
-	if err := AddRestDate4Student(student, rdate, db); err != nil {
-		return err
-	}
 	tx.Commit()
 	return nil
 }
 
 //休んだ日の削除
-func DeleteRestDate(id uint64, db *gorm.DB) error {
-	tx := db.Begin()
-	restdate, err := GetRestDatebyID(id, db)
-	if err != nil {
-		return err
-	}
+func (m Model) DeleteRestDate(id uint64) error {
+	tx := m.Db.Begin()
 
-	student, err := GetStudentbyID(id, db)
-	if err != nil {
-		return err
-	}
-
-	if err := DeleteRestFromStudent(student, restdate, db); err != nil {
-		tx.Rollback()
-		return err
-	}
 	if err := tx.Where("id = ?", id).Delete(&RestDate{}).Error; err != nil {
 		tx.Rollback()
 		return err

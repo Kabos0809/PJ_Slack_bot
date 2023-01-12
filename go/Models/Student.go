@@ -1,13 +1,21 @@
 package Models
 
-import (
-	"gorm.io/gorm"
-)
+func (m Model) GetStudentbySchoolAndGrade(school string, grade string) (*[]Student, error) {
+	var students []Student
+	tx := m.Db.Preload("RestDates").Begin()
+	if err := tx.Where("School = ?", school).Where("Grade = ?", grade).Find(&students).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	tx.Commit()
+
+	return &students, nil
+}
 
 //IDから生徒情報取得
-func GetStudentbyID(id uint64, db *gorm.DB) (*Student, error) {
+func (m Model) GetStudentbyID(id uint64) (*Student, error) {
 	var student *Student
-	tx := db.Begin()
+	tx := m.Db.Begin()
 	if err := tx.Where("id = ?", id).First(student).Error; err != nil {
 		tx.Rollback()
 		return student, err
@@ -17,13 +25,10 @@ func GetStudentbyID(id uint64, db *gorm.DB) (*Student, error) {
 }
 
 //生徒情報の登録
-func CreateStudent(student *Student, school *School, db *gorm.DB) error {
-	tx := db.Begin()
+func (m Model) CreateStudent(student *Student, school *School) error {
+	tx := m.Db.Begin()
 	if err := tx.Create(student).Error; err != nil {
 		tx.Rollback()
-		return err
-	}
-	if err := db.Model(school).Association("Students").Append(student); err != nil {
 		return err
 	}
 	tx.Commit()
@@ -31,8 +36,8 @@ func CreateStudent(student *Student, school *School, db *gorm.DB) error {
 }
 
 //生徒情報の削除
-func DeleteStudent(student *Student, school *School, db *gorm.DB) error {
-	tx := db.Begin()
+func (m Model) DeleteStudent(student *Student, school *School) error {
+	tx := m.Db.Begin()
 	if err := tx.Where("id = ?", student.ID).Delete(&Student{}).Error; err != nil {
 		tx.Rollback()
 		return err
@@ -42,45 +47,35 @@ func DeleteStudent(student *Student, school *School, db *gorm.DB) error {
 }
 
 //残り振替回数の追加
-func IncrementCount(student *Student, sub string, db *gorm.DB) error {
-	tx := db.Begin()
+func IncrementCount(student *Student, sub string) *Student {
 	switch sub {
 	case "国語": student.JpnCounts = student.JpnCounts + 1
 	case "数学": student.MathCounts = student.MathCounts + 1
 	case "英語": student.EngCounts = student.EngCounts + 1
 	}
-	if err := tx.Save(student).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
+	return student
 }
 
 //残り振替回数を減らす
-func DecrementCount(student *Student, sub string, db *gorm.DB) error {
-	tx := db.Begin()
+func DecrementCount(student *Student, sub string) *Student {
 	switch sub {
 	case "国語": student.JpnCounts = student.JpnCounts - 1
 	case "数学": student.MathCounts = student.MathCounts - 1
 	case "英語": student.EngCounts = student.EngCounts - 1
 	}
-	if err := tx.Save(student).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
+	return student
 }
 
 //休んだ日の追加
-func AddRestDate4Student(student *Student, rdate *RestDate, db *gorm.DB) error {
-	tx := db.Begin()
-	if err := db.Model(student).Association("RestDate").Append(rdate); err != nil {
+func (m Model) AddRestDate4Student(student *Student, rdate *RestDate) error {
+	tx := m.Db.Begin()
+	if err := m.Db.Model(student).Association("RestDate").Append(rdate); err != nil {
 		tx.Rollback()
 		return err
 	}
-	if err := IncrementCount(student, rdate.Subject, db); err != nil {
+	student = IncrementCount(student, rdate.Subject)
+
+	if err := tx.Save(student).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -89,30 +84,40 @@ func AddRestDate4Student(student *Student, rdate *RestDate, db *gorm.DB) error {
 }
 
 //休んだ日の削除
-func DeleteRestFromStudent(student *Student, rdate *RestDate, db *gorm.DB) error {
-	tx := db.Begin()
-	if err := db.Model(student).Association("RestDate").Delete(rdate); err != nil {
+func (m Model) DeleteRestFromStudent(student *Student, rdate *RestDate) error {
+	tx := m.Db.Begin()
+	if err := m.Db.Model(student).Association("RestDate").Delete(rdate); err != nil {
 		tx.Rollback()
 		return err
 	}
-	if err := DecrementCount(student, rdate.Subject, db); err != nil {
+
+	student= DecrementCount(student, rdate.Subject)
+	
+	if err := tx.Save(student).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
 	tx.Commit()
+
 	return nil
 }
 
 //振替回数を返す
-func TransferCount(studentID uint64, db *gorm.DB) (*TransferCounts, error) {
-	student, err := GetStudentbyID(studentID, db)
-	if err != nil {
-		return nil, err
+func (m Model) TransferCount(id uint64) (TransferCounts, error) {
+	var student *Student
+
+	tx := m.Db.Preload("RestDates").Begin()
+	if err := tx.Where("id = ?", id).First(student).Error; err != nil {
+		tx.Rollback()
+		return TransferCounts{}, err
 	}
-	counts := &TransferCounts{
+	tx.Commit()
+
+	counts := TransferCounts{
 		JpnCounts: student.JpnCounts,
 		MathCounts: student.MathCounts,
 		EngCounts: student.EngCounts,
 	}
+	
 	return counts, nil
 }

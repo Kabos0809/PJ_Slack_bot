@@ -21,7 +21,9 @@ func main() {
 	api := slack.New(os.Getenv("SLACK_BOT_TOKEN"))
 	
 	dsn := Config.DbUrl()
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -33,11 +35,14 @@ func main() {
 		panic(err)
 	}
 
+
+	m := Models.Model{Db: db}
+
 	http.HandleFunc("/slack/mentioned", Middleware.Verify(func (w http.ResponseWriter, r *http.Request) {
-		Mentioned_Message.MentionedHandler(w, r, api, db)
+		Mentioned_Message.MentionedHandler(w, r, api, m)
 	}))
-	/*http.HandleFunc("slack/Ineractive", Middleware.Verify(func (w http.ResponseWriter, r *http.Request) {
-		Interactive_Message.InteractiveHandler(w, r, api, db)
+	/*http.HandleFunc("/slack/Ineractive", Middleware.Verify(func (w http.ResponseWriter, r *http.Request) {
+		Interactive_Message.InteractiveHandler(w, r, api, m)
 	}))*/
 
 	//middleware := Middleware.NewSecretsVerifierMiddleware(mux)

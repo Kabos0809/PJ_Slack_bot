@@ -1,12 +1,8 @@
 package Models
 
-import (
-	"gorm.io/gorm"
-)
-
-func GetAllSchool(db *gorm.DB) (*[]School, error) {
+func (m Model) GetAllSchool() (*[]School, error) {
 	var schools []School
-	tx := db.Begin()
+	tx := m.Db.Preload("Students").Begin()
 	if err := tx.Find(&schools).Error; err != nil {
 		tx.Rollback()
 		return nil, err
@@ -15,9 +11,9 @@ func GetAllSchool(db *gorm.DB) (*[]School, error) {
 	return &schools, nil
 }
 
-func GetSchool(id uint64, db *gorm.DB) (*School, error) {
+func (m Model) GetSchoolbyID(id uint64) (*School, error) {
 	var school *School
-	tx := db.Begin()
+	tx := m.Db.Preload("Students").Begin()
 	if err := tx.Where("id = ?", id).Find(school).Error; err != nil {
 		tx.Rollback()
 		return nil, err
@@ -27,8 +23,8 @@ func GetSchool(id uint64, db *gorm.DB) (*School, error) {
 	return school, nil
 }
 
-func AddSchool(school *School, db *gorm.DB) error {
-	tx := db.Begin()
+func (m Model) AddSchool(school *School) error {
+	tx := m.Db.Begin()
 	if err := tx.Create(school).Error; err != nil {
 		tx.Rollback()
 		return err
@@ -37,8 +33,8 @@ func AddSchool(school *School, db *gorm.DB) error {
 	return nil
 }
 
-func DeleteSchool(id uint64, db *gorm.DB) error {
-	tx := db.Begin()
+func (m Model) DeleteSchool(id uint64) error {
+	tx := m.Db.Preload("Students").Begin()
 	if err := tx.Where("id = ?", id).Delete(&School{}).Error; err != nil {
 		tx.Rollback()
 		return err

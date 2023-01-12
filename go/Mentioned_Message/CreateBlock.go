@@ -1,7 +1,6 @@
 package Mentioned_Message
 
 import (
-	"gorm.io/gorm"
 	"github.com/slack-go/slack"
 	"github.com/kabos0809/slack_bot/go/Models"
 )
@@ -19,23 +18,28 @@ const (
 )
 
 //講師向けブロック
-func createSelectBlock4Teachers(db *gorm.DB) slack.MsgOption {
-	descText := slack.NewTextBlockObject("mrkdwn", "*学年*と*学校*を選択してください", false, false)
+func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
+	descText := slack.NewTextBlockObject("mrkdwn", "*学年*と*学校*を選択してください.", false, false)
 	descTextSection := slack.NewSectionBlock(descText, nil, nil)
 
 	dividerBlock := slack.NewDividerBlock()
 
-	schools, err := Models.GetAllSchool(db)
-
+	schools, err := m.GetAllSchool()
 	if err != nil {
 		errBlock := CreateErrorMsgBlock(NotFound, SelectSchool)
 		return errBlock
 	}
 
 	school_opt := make([]*slack.OptionBlockObject, 0, len(*schools))
-	for _, v := range *schools {
-		optText := slack.NewTextBlockObject("plain_text", v.Name, false, false)
-		school_opt = append(school_opt, slack.NewOptionBlockObject(string(v.ID), nil, optText))
+
+	if len(*schools) != 0 {
+		for _, v := range *schools {
+			optText := slack.NewTextBlockObject("plain_text", v.Name, false, false)
+			school_opt = append(school_opt, slack.NewOptionBlockObject(string(v.ID), nil, optText))
+		}
+	} else {
+		errBlock := CreateErrorMsgBlock(NotFound, SelectSchool)
+		return errBlock
 	}
 
 	s_placeholder := slack.NewTextBlockObject("plain_text", "学校を選択してください", false, false)
@@ -64,11 +68,11 @@ func createSelectBlock4Employee() slack.MsgOption {
 
 	dividerBlock := slack.NewDividerBlock()
 	
-	addRestDateButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, false)
-	addRestDateButtonElement := slack.NewButtonBlockElement("actionAddRestDate", "addRestDate", addRestDateButtonText)
-	addRestDateAccessory := slack.NewAccessory(addRestDateButtonElement)
-	addRestDateSectionText := slack.NewTextBlockObject("mrkdwn", "*欠席の登録*\n欠席登録ができます", false, false)
-	addRestDateSection := slack.NewSectionBlock(addRestDateSectionText, nil, addRestDateAccessory)
+	RestDateButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, false)
+	RestDateButtonElement := slack.NewButtonBlockElement("actionRestDate", "RestDate", RestDateButtonText)
+	RestDateAccessory := slack.NewAccessory(RestDateButtonElement)
+	RestDateSectionText := slack.NewTextBlockObject("mrkdwn", "*欠席の登録*\n欠席登録ができます", false, false)
+	RestDateSection := slack.NewSectionBlock(RestDateSectionText, nil, RestDateAccessory)
 
 	checkTransferCountButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, false)
 	checkTransferCountButtonElement := slack.NewButtonBlockElement("actionCheckTransferCount", "checkTransferCount", checkTransferCountButtonText)
@@ -77,12 +81,18 @@ func createSelectBlock4Employee() slack.MsgOption {
 	checkTransferCountSection := slack.NewSectionBlock(checkTransferCountSectionText, nil, checkTransferCountAccessory)
 
 	studentButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, false)
-	studentButtonElement := slack.NewButtonBlockElement("actionStudentAdd", "studentAdd", studentButtonText)
+	studentButtonElement := slack.NewButtonBlockElement("actionStudentOperation", "student", studentButtonText)
 	studentAccessory := slack.NewAccessory(studentButtonElement)
 	studentSectionText := slack.NewTextBlockObject("mrkdwn", "*生徒情報の追加・編集*\n生徒情報の追加、編集、削除ができます", false, false)
 	studentSection := slack.NewSectionBlock(studentSectionText, nil, studentAccessory)
 
-	blocks := slack.MsgOptionBlocks(descTextSection, dividerBlock, addRestDateSection, checkTransferCountSection, studentSection)
+	schoolButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, false)
+	schoolButtonElement := slack.NewButtonBlockElement("actionSchoolOperation", "school", schoolButtonText)
+	schoolAccessory := slack.NewAccessory(schoolButtonElement)
+	schoolSectionText := slack.NewTextBlockObject("mrkdwn", "*学校の追加・削除*\n学校の追加・削除ができます。", false, false)
+	schoolSection := slack.NewSectionBlock(schoolSectionText, nil, schoolAccessory)
+
+	blocks := slack.MsgOptionBlocks(descTextSection, dividerBlock, checkTransferCountSection, RestDateSection, studentSection, schoolSection)
 
 	return blocks
 }

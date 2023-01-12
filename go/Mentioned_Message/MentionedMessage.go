@@ -7,9 +7,9 @@ import (
 	"log"
 	"net/http"
 
-	"gorm.io/gorm"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
+	"github.com/kabos0809/slack_bot/go/Models"
 )
 
 var slack_signing_secret string = os.Getenv("SLACK_SIGNING_SECRET")
@@ -19,7 +19,7 @@ var slack_signing_secret string = os.Getenv("SLACK_SIGNING_SECRET")
 ログにエラーメッセージを表示するが、200を返している。
 */
 
-func MentionedHandler(w http.ResponseWriter, r *http.Request, api *slack.Client, db *gorm.DB) {
+func MentionedHandler(w http.ResponseWriter, r *http.Request, api *slack.Client, m Models.Model) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("[ERROR] Failed to read Request body: %v", err)
@@ -56,11 +56,10 @@ func MentionedHandler(w http.ResponseWriter, r *http.Request, api *slack.Client,
 	}
 	switch ev := eventsAPIEvent.InnerEvent.Data.(type) {
 	case *slackevents.AppMentionEvent:
-		msg := createSelectBlock4Teachers(db)
+		msg := createSelectBlock4Teachers(m)
+		fallbackText := slack.MsgOptionText("This client is not supported.", false)
 
-		if _, _, err := api.PostMessage(ev.Channel, msg); err != nil {
-			errMsg := CreateErrorMsgBlock(InternalServerError, "")
-			api.SendMessage(ev.Channel, errMsg)
+		if _, err := api.PostEphemeral(ev.Channel, ev.User, fallbackText, msg); err != nil {
 			log.Printf("[ERROR] Failed to send a message to Slack: %v", err)
 			w.WriteHeader(200)
 			return

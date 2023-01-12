@@ -1,11 +1,13 @@
 package Models
 
 type Student struct {
-	ID uint64 `gorm:"AUTO_INCREMENT;"`
+	ID uint64 `gorm:"primaryKey; AUTO_INCREMENT;"`
 	FirstName string `gorm:"not null;" binding:"required"`
 	LastName string `gorm:"not null;" binding:"required"`
 	Name string `gorm:"not null;" binding:"required"`
 	Grade string `gorm:"not null;" binding:"required"`
+	SchoolID uint64
+	RestDates []RestDate `gorm:"foreignKey:StudentID;references:ID; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	//振替予定のリストはリリース後拡張予定
 	//Schedules []TransferSchedules `gorm:"foreignKey: ID"`
 	MathCounts uint64 `gorm:"not null; default: 0;"`

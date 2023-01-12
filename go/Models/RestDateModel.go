@@ -5,8 +5,8 @@ import (
 )
 
 type RestDate struct {
-	ID uint64 `gorm: AUTO_INCREMENT;`
-	Name string `gorm:"not null;"`
+	ID uint64 `gorm:"primaryKey; ;AUTO_INCREMENT;"`
+	StudentID uint64 
 	Date time.Time `gorm:"not null;"`
 	Subject string `gorm:"not null;"`
 }
