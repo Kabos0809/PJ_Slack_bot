@@ -19,14 +19,14 @@ const (
 
 //講師向けブロック
 func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
-	descText := slack.NewTextBlockObject("mrkdwn", "*学年*と*学校*を選択してください.", false, false)
+	descText := slack.NewTextBlockObject("mrkdwn", "*学年*と*学校*を選択してください.", true, true)
 	descTextSection := slack.NewSectionBlock(descText, nil, nil)
 
 	dividerBlock := slack.NewDividerBlock()
 
 	schools, err := m.GetAllSchool()
 	if err != nil {
-		errBlock := CreateErrorMsgBlock(NotFound, SelectSchool)
+		errBlock := CreateErrorMsgBlock(InternalServerError, SelectSchool)
 		return errBlock
 	}
 
@@ -34,7 +34,7 @@ func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
 
 	if len(*schools) != 0 {
 		for _, v := range *schools {
-			optText := slack.NewTextBlockObject("plain_text", v.Name, false, false)
+			optText := slack.NewTextBlockObject("plain_text", v.Name, true, true)
 			school_opt = append(school_opt, slack.NewOptionBlockObject(string(v.ID), nil, optText))
 		}
 	} else {
@@ -42,16 +42,16 @@ func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
 		return errBlock
 	}
 
-	s_placeholder := slack.NewTextBlockObject("plain_text", "学校を選択してください", false, false)
+	s_placeholder := slack.NewTextBlockObject("plain_text", "学校を選択してください", true, true)
 	school_select := slack.NewOptionsSelectBlockElement(slack.OptTypeStatic, s_placeholder, "", school_opt...)
 
 	grades_opt := make([]*slack.OptionBlockObject, 0, len(grades))
 	for _, v := range grades {
-		optText := slack.NewTextBlockObject("plain_text", v, false, false)
+		optText := slack.NewTextBlockObject("plain_text", v, true, true)
 		grades_opt = append(grades_opt, slack.NewOptionBlockObject(v, nil, optText))
 	}
 
-	g_placeholder := slack.NewTextBlockObject("plain_text", "学年を選択してください", false, false)
+	g_placeholder := slack.NewTextBlockObject("plain_text", "学年を選択してください", true, true)
 	grade_select := slack.NewOptionsSelectBlockElement(slack.OptTypeStatic, g_placeholder, "", grades_opt...)
 
 	actionBlock := slack.NewActionBlock(SchoolandGradeSelect, school_select, grade_select)
@@ -63,33 +63,33 @@ func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
 
 //社員向けブロック
 func createSelectBlock4Employee() slack.MsgOption {
-	descText := slack.NewTextBlockObject("mrkdwn", "何を行いますか？", false, false)
+	descText := slack.NewTextBlockObject("mrkdwn", "何を行いますか？", true, true)
 	descTextSection := slack.NewSectionBlock(descText, nil, nil)
 
 	dividerBlock := slack.NewDividerBlock()
 	
-	RestDateButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, false)
+	RestDateButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, true)
 	RestDateButtonElement := slack.NewButtonBlockElement("actionRestDate", "RestDate", RestDateButtonText)
 	RestDateAccessory := slack.NewAccessory(RestDateButtonElement)
-	RestDateSectionText := slack.NewTextBlockObject("mrkdwn", "*欠席の登録*\n欠席登録ができます", false, false)
+	RestDateSectionText := slack.NewTextBlockObject("mrkdwn", "*欠席の登録*\n欠席登録ができます", true, true)
 	RestDateSection := slack.NewSectionBlock(RestDateSectionText, nil, RestDateAccessory)
 
-	checkTransferCountButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, false)
+	checkTransferCountButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, true)
 	checkTransferCountButtonElement := slack.NewButtonBlockElement("actionCheckTransferCount", "checkTransferCount", checkTransferCountButtonText)
 	checkTransferCountAccessory := slack.NewAccessory(checkTransferCountButtonElement)
-	checkTransferCountSectionText := slack.NewTextBlockObject("mrkdwn", "*残り振替回数確認*\n特定の生徒の残り振替回数の確認ができます", false, false)
+	checkTransferCountSectionText := slack.NewTextBlockObject("mrkdwn", "*残り振替回数確認*\n特定の生徒の残り振替回数の確認ができます", true, true)
 	checkTransferCountSection := slack.NewSectionBlock(checkTransferCountSectionText, nil, checkTransferCountAccessory)
 
-	studentButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, false)
+	studentButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, true)
 	studentButtonElement := slack.NewButtonBlockElement("actionStudentOperation", "student", studentButtonText)
 	studentAccessory := slack.NewAccessory(studentButtonElement)
-	studentSectionText := slack.NewTextBlockObject("mrkdwn", "*生徒情報の追加・編集*\n生徒情報の追加、編集、削除ができます", false, false)
+	studentSectionText := slack.NewTextBlockObject("mrkdwn", "*生徒情報の追加・編集*\n生徒情報の追加、編集、削除ができます", true, true)
 	studentSection := slack.NewSectionBlock(studentSectionText, nil, studentAccessory)
 
-	schoolButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, false)
+	schoolButtonText := slack.NewTextBlockObject("plain_text", "Do it", true, true)
 	schoolButtonElement := slack.NewButtonBlockElement("actionSchoolOperation", "school", schoolButtonText)
 	schoolAccessory := slack.NewAccessory(schoolButtonElement)
-	schoolSectionText := slack.NewTextBlockObject("mrkdwn", "*学校の追加・削除*\n学校の追加・削除ができます。", false, false)
+	schoolSectionText := slack.NewTextBlockObject("mrkdwn", "*学校の追加・削除*\n学校の追加・削除ができます。", true, true)
 	schoolSection := slack.NewSectionBlock(schoolSectionText, nil, schoolAccessory)
 
 	blocks := slack.MsgOptionBlocks(descTextSection, dividerBlock, checkTransferCountSection, RestDateSection, studentSection, schoolSection)
@@ -104,14 +104,18 @@ func CreateErrorMsgBlock(status int, v string) slack.MsgOption {
 	case NotFound:
 		switch v{
 		case SelectSchool:
-			errText := slack.NewTextBlockObject("mrkdwn", "*学校を取得できませんでした*\n学校が一つも登録されていない可能性があります。", true, false)
+			errText := slack.NewTextBlockObject("mrkdwn", "*学校を取得できませんでした*\n学校が一つも登録されていない可能性があります。", true, true)
 			errTextSection := slack.NewSectionBlock(errText, nil, nil)
 			block = slack.MsgOptionBlocks(errTextSection)
 		default:
-			errText := slack.NewTextBlockObject("mrkdwn", "*データを取得できませんでした*\n数学科 鶴賀までご連絡ください。:pray:", true, false)
+			errText := slack.NewTextBlockObject("mrkdwn", "*データを取得できませんでした*\n数学科 鶴賀までご連絡ください。:pray:", true, true)
 			errTextSection := slack.NewSectionBlock(errText, nil, nil)
 			block = slack.MsgOptionBlocks(errTextSection)
 		}
+	case InternalServerError:
+		errText := slack.NewTextBlockObject("mrkdwn", "*サーバー内部でエラーが発生しました*\n数学科 鶴賀までご連絡ください。 :pray:", true, true)
+		errTextSection := slack.NewSectionBlock(errText, nil, nil)
+		block = slack.MsgOptionBlocks(errTextSection)
 	}
 
 	return block
