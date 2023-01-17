@@ -6,7 +6,7 @@ import (
 )
 
 type RestDate struct {
-	ID uuid.UUID `gorm:"primaryKey; type:uuid; default:uuid_generate_v4();"`
+	ID uuid.UUID `gorm:"primaryKey; type:uuid;"`
 	StudentID uuid.UUID
 	Date time.Time `gorm:"not null;"`
 	Subject string `gorm:"not null;"`

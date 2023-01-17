@@ -36,13 +36,14 @@ func TestCreate(t *testing.T) {
 	m := Models.Model{Db: db}
 
 	testSchool := Models.School{
+		ID: uuid.New(),
 		Name: "TestSchool1",
 	}
 	if err := m.AddSchool(&testSchool); err != nil {
 		t.Fatalf("[FATAL] Failed to AddSchool: %s", err)
 	}
 
-	school, err := m.TestGetFirstSchool()
+	school, err := m.TestGetFirstSchool(testSchool.ID)
 	if err != nil {
 		t.Fatalf("[FATAL] Failed to Get School: %s", err)
 	}

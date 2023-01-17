@@ -3,7 +3,7 @@ package Models
 import "github.com/google/uuid"
 
 type Student struct {
-	ID uuid.UUID `gorm:"primaryKey; type:uuid; default:uuid_generate_v4();"`
+	ID uuid.UUID `gorm:"primaryKey; type:uuid;"`
 	FirstName string `gorm:"not null;" binding:"required"`
 	LastName string `gorm:"not null;" binding:"required"`
 	Name string `gorm:"not null;" binding:"required"`

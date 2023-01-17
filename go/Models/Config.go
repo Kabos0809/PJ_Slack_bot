@@ -1,6 +1,9 @@
 package Models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"github.com/google/uuid"
+)
 
 type ModelInterface interface {
 	GetRestDatebyID(id uint64) (*RestDate, error)
@@ -10,7 +13,7 @@ type ModelInterface interface {
 	GetSchoolbyID(id uint64) (*School, error)
 	AddSchool(school *School) error
 	DeleteSchool(id uint64) error
-	TestGetFirstSchool() (*School, error)
+	TestGetFirstSchool(id uuid.UUID) (*School, error)
 	GetStudentbySchoolAndGrade(school string, grade string) (*[]Student, error)
 	GetStudentbyID(id uint64) (*Student, error)
 	CreateStudent(student *Student) error

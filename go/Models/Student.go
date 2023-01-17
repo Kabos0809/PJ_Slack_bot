@@ -74,7 +74,7 @@ func (m Model) AddRestDate4Student(rdate *RestDate, id uuid.UUID) error {
 	var student *Student
 	tx := m.Db.Preload("RestDates").Begin()
 
-	if err := tx.Where("id = ?", id).First(student).Error; err != nil {
+	if err := tx.Where("id = ?", id).First(&student).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -99,7 +99,7 @@ func (m Model) DeleteRestFromStudent(rdate *RestDate, id uuid.UUID) error {
 	var student *Student
 	tx := m.Db.Preload("RestDates").Begin()
 
-	if err := tx.Where("id = ?", id).First(student).Error; err != nil {
+	if err := tx.Where("id = ?", id).First(&student).Error; err != nil {
 		tx.Rollback()
 		return err
 	}

@@ -49,7 +49,7 @@ func (m Model) AddStudent4School(student *Student, id uuid.UUID) error {
 	var school *School
 	tx := m.Db.Begin()
 
-	if err := tx.Where("id = ?", id).First(school).Error; err != nil {
+	if err := tx.Where("id = ?", id).First(&school).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -69,11 +69,11 @@ func (m Model) AddStudent4School(student *Student, id uuid.UUID) error {
 }
 
 //テスト時に使う関数
-func (m Model) TestGetFirstSchool() (*School, error) {
+func (m Model) TestGetFirstSchool(id uuid.UUID) (*School, error) {
 	var school *School
 	tx := m.Db.Preload("Students").Begin()
 
-	if err := tx.First(school).Error; err != nil {
+	if err := tx.First(&school, id).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
