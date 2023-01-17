@@ -40,13 +40,20 @@ func (m Model) CreateRestDate(rdate *RestDate) error {
 		tx.Rollback()
 		return err
 	}
+
 	tx.Commit()
 	return nil
 }
 
 //休んだ日の削除
 func (m Model) DeleteRestDate(id uint64) error {
+	var restdate *RestDate
 	tx := m.Db.Begin()
+
+	if err := tx.Where("id = ?", id).First(restdate).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
 
 	if err := tx.Where("id = ?", id).Delete(&RestDate{}).Error; err != nil {
 		tx.Rollback()

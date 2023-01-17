@@ -25,12 +25,13 @@ func (m Model) GetStudentbyID(id uint64) (*Student, error) {
 }
 
 //生徒情報の登録
-func (m Model) CreateStudent(student *Student, school *School) error {
+func (m Model) CreateStudent(student *Student) error {
 	tx := m.Db.Begin()
 	if err := tx.Create(student).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
+
 	tx.Commit()
 	return nil
 }
@@ -67,12 +68,20 @@ func DecrementCount(student *Student, sub string) *Student {
 }
 
 //休んだ日の追加
-func (m Model) AddRestDate4Student(student *Student, rdate *RestDate) error {
-	tx := m.Db.Begin()
-	if err := m.Db.Model(student).Association("RestDate").Append(rdate); err != nil {
+func (m Model) AddRestDate4Student(rdate *RestDate, id uint64) error {
+	var student *Student
+	tx := m.Db.Preload("RestDates").Begin()
+
+	if err := tx.Where("id = ?", id).First(student).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
+
+	if err := m.Db.Model(student).Association("RestDates").Append(rdate); err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	student = IncrementCount(student, rdate.Subject)
 
 	if err := tx.Save(student).Error; err != nil {
@@ -84,14 +93,21 @@ func (m Model) AddRestDate4Student(student *Student, rdate *RestDate) error {
 }
 
 //休んだ日の削除
-func (m Model) DeleteRestFromStudent(student *Student, rdate *RestDate) error {
-	tx := m.Db.Begin()
-	if err := m.Db.Model(student).Association("RestDate").Delete(rdate); err != nil {
+func (m Model) DeleteRestFromStudent(rdate *RestDate, id uint64) error {
+	var student *Student
+	tx := m.Db.Preload("RestDates").Begin()
+
+	if err := tx.Where("id = ?", id).First(student).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	student= DecrementCount(student, rdate.Subject)
+	if err := m.Db.Model(student).Association("RestDates").Delete(rdate); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	student = DecrementCount(student, rdate.Subject)
 	
 	if err := tx.Save(student).Error; err != nil {
 		tx.Rollback()

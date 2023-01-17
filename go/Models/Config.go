@@ -14,6 +14,8 @@ type ModelInterface interface {
 	GetStudentbyID(id uint64) (*Student, error)
 	CreateStudent(student *Student) error
 	DeleteStudent(id uint64) error
+	AddRestDate4Student(rdate *RestDate, id uint64) error
+	DeleteRestFromStudent(rdate *RestDate, id uint64) error
 }
 
 type Model struct {
