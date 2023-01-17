@@ -22,7 +22,7 @@ func (m Model) GetAllRestDate() (*[]RestDate, error) {
 func (m Model) GetRestDatebyID(id uuid.UUID) (*RestDate, error) {
 	var restdate *RestDate
 	tx := m.Db.Begin()
-	if err := tx.Where("id = ?", id).First(restdate).Error; err != nil {
+	if err := tx.Where("id = ?", id).First(&restdate).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -48,13 +48,7 @@ func (m Model) CreateRestDate(rdate *RestDate) error {
 
 //休んだ日の削除
 func (m Model) DeleteRestDate(id uuid.UUID) error {
-	var restdate *RestDate
 	tx := m.Db.Begin()
-
-	if err := tx.Where("id = ?", id).First(restdate).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
 
 	if err := tx.Where("id = ?", id).Delete(&RestDate{}).Error; err != nil {
 		tx.Rollback()
