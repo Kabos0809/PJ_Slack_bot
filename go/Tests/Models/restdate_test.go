@@ -1,8 +1,10 @@
 package test
 
 import (
+	"log"
 	"time"
 	"testing"
+	"database/sql"
 	
 	"gorm.io/gorm"
 	"gorm.io/driver/postgres"
@@ -22,26 +24,11 @@ type metadata struct {
 }
 
 var d = metadata{}
+var m Models.Model
+var sqldb *sql.DB
 
 func TestCreate(t *testing.T) {
-	godotenv.Load("../../.env")
-	
-	dsn := Config.DbUrl()
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
-	if err != nil {
-		panic(err)
-	}
-	sqlDB, _ := db.DB()
-	defer sqlDB.Close()
-	
-	err = db.AutoMigrate(&Models.RestDate{}, &Models.Student{}, &Models.School{})
-	if err != nil {
-		panic(err)
-	}
-
-	m := Models.Model{Db: db}
+	m, sqldb = ConnDB()
 	
 	testSchool := Models.School{
 		ID: uuid.New(),
@@ -96,26 +83,15 @@ func TestCreate(t *testing.T) {
 	}
 }
 
+func TestGetRestDate(t *testing.T) {
+	restdate, err := m.GetRestDatebyID(d.resid)
+	if err != nil {
+		t.Fatalf("[FATAL] Failed to Get RestDate by ID: %s", err)
+	}
+	log.Printf("StudentID:%s, Date:%s, Subject:%s", restdate.StudentID.String(), restdate.Date.Format(format), restdate.Subject)
+}
+
 func TestDeleteRestDate(t *testing.T) {
-	godotenv.Load("../../.env")
-	
-	dsn := Config.DbUrl()
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
-	if err != nil {
-		panic(err)
-	}
-	sqlDB, _ := db.DB()
-	defer sqlDB.Close()
-	
-	err = db.AutoMigrate(&Models.RestDate{}, &Models.Student{}, &Models.School{})
-	if err != nil {
-		panic(err)
-	}
-
-	m := Models.Model{Db: db}
-
 	restdate, err := m.GetRestDatebyID(d.resid)
 	if err != nil {
 		t.Fatalf("[FATAL] Failed to Get RestDate by ID: %s", err)
@@ -131,25 +107,7 @@ func TestDeleteRestDate(t *testing.T) {
 }
 
 func TestCreateFatal(t *testing.T) {
-	godotenv.Load("../../.env")
-	
-	dsn := Config.DbUrl()
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
-	if err != nil {
-		panic(err)
-	}
-	sqlDB, _ := db.DB()
-	defer sqlDB.Close()
-	
-	err = db.AutoMigrate(&Models.RestDate{}, &Models.Student{}, &Models.School{})
-	if err != nil {
-		panic(err)
-	}
-
-	m := Models.Model{Db: db}
-	
+	defer sqldb.Close()
 	testSchool := Models.School{
 		ID: uuid.New(),
 		Name: "TestSchool1",
@@ -195,4 +153,25 @@ func TestCreateFatal(t *testing.T) {
 	if err := m.AddRestDate4Student(&testRestDate, testRestDate.StudentID); err != nil {
 		t.Fatalf("[FATAL] Failed to Add RestDate for Student: %s", err)
 	}
+}
+
+func ConnDB() (Models.Model, *sql.DB) {
+	godotenv.Load("../../.env")
+	
+	dsn := Config.DbUrl()
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
+	if err != nil {
+		panic(err)
+	}
+	sqlDB, _ := db.DB()
+	
+	err = db.AutoMigrate(&Models.RestDate{}, &Models.Student{}, &Models.School{})
+	if err != nil {
+		panic(err)
+	}
+
+	m := Models.Model{Db: db}
+	return m, sqlDB
 }

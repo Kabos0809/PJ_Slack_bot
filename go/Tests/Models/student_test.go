@@ -1,6 +1,6 @@
 package test
 
-import (
+/*import (
 	"testing"
 
 	"gorm.io/gorm"
@@ -9,4 +9,4 @@ import (
 	"github.com/google/uuid"
 	"github.com/kabos0809/slack_bot/go/Models"
 	"github.com/kabos0809/slack_bot/go/Config"
-)
+)*/
