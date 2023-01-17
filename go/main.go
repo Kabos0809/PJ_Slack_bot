@@ -16,7 +16,6 @@ import (
 )
 
 func main() {
-	//mux := http.NewServeMux()
 	godotenv.Load("../.env")
 	api := slack.New(os.Getenv("SLACK_BOT_TOKEN"))
 	
@@ -44,8 +43,9 @@ func main() {
 	/*http.HandleFunc("/slack/Ineractive", Middleware.Verify(func (w http.ResponseWriter, r *http.Request) {
 		Interactive_Message.InteractiveHandler(w, r, api, m)
 	}))*/
-
-	//middleware := Middleware.NewSecretsVerifierMiddleware(mux)
+	/*http.HandleFunc("/RestDate/list", Middleware.JWTCheck(func (w http.ResponseWriter, r *http.Request) {
+		ApiHandlers.ListHandler(w, r, m)
+	}))*/
 
 	log.Println("[INFO] Server listening")
 	if err := http.ListenAndServe(":8080", nil); err != nil {

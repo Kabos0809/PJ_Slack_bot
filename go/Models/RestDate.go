@@ -2,6 +2,7 @@ package Models
 
 import (
 	"errors"
+	"github.com/google/uuid"
 )
 
 //以下二つはWebページに対応した場合に使うかも
@@ -18,7 +19,7 @@ func (m Model) GetAllRestDate() (*[]RestDate, error) {
 }
 */
 
-func (m Model) GetRestDatebyID(id uint64) (*RestDate, error) {
+func (m Model) GetRestDatebyID(id uuid.UUID) (*RestDate, error) {
 	var restdate *RestDate
 	tx := m.Db.Begin()
 	if err := tx.Where("id = ?", id).First(restdate).Error; err != nil {
@@ -46,7 +47,7 @@ func (m Model) CreateRestDate(rdate *RestDate) error {
 }
 
 //休んだ日の削除
-func (m Model) DeleteRestDate(id uint64) error {
+func (m Model) DeleteRestDate(id uuid.UUID) error {
 	var restdate *RestDate
 	tx := m.Db.Begin()
 

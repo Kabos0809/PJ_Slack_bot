@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/driver/postgres"
 	"github.com/joho/godotenv"
+	"github.com/google/uuid"
 	"github.com/kabos0809/slack_bot/go/Models"
 	"github.com/kabos0809/slack_bot/go/Config"
 )
@@ -38,36 +39,41 @@ func TestCreate(t *testing.T) {
 		Name: "TestSchool1",
 	}
 	if err := m.AddSchool(&testSchool); err != nil {
-		t.Fatalf("[FAIL] Failed to AddSchool: %s", err)
+		t.Fatalf("[FATAL] Failed to AddSchool: %s", err)
+	}
+
+	school, err := m.TestGetFirstSchool()
+	if err != nil {
+		t.Fatalf("[FATAL] Failed to Get School: %s", err)
 	}
 
 	testStudent := Models.Student{
-		ID: 1,
+		ID: uuid.New(),
 		FirstName: "hoge",
 		LastName: "henyo",
 		Name: "hogehenyo",
 		Grade: "テスト",
-		SchoolID: 1,
+		SchoolID: school.ID,
 	}
 	if err := m.CreateStudent(&testStudent); err != nil {
-		t.Fatalf("[FAIL] Failed to CreateStudent: %s", err)
+		t.Fatalf("[FATAL] Failed to CreateStudent: %s", err)
 	}
 
 	if err := m.AddStudent4School(&testStudent, testStudent.SchoolID); err != nil {
-		t.Fatalf("[FAIL] Failed to Add Student for School: %s", err)
+		t.Fatalf("[FATAL] Failed to Add Student for School: %s", err)
 	}
 
 	date, _ := time.Parse(testdate, format)
 
 	testRestDate := Models.RestDate{
-		ID: 1,
-		StudentID: 1,
+		ID: uuid.New(),
+		StudentID: testStudent.ID,
 		Date: date,
 		Subject: "英語",
 	}
 
 	if err := m.CreateRestDate(&testRestDate); err != nil {
-		t.Fatalf("[FAIL] Failed to CreateRestDate: %s", err)
+		t.Fatalf("[FATAL] Failed to CreateRestDate: %s", err)
 	}
 
 	if err := m.AddRestDate4Student(&testRestDate, testRestDate.StudentID); err != nil {

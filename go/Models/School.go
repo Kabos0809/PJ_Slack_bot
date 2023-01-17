@@ -1,5 +1,7 @@
 package Models
 
+import "github.com/google/uuid"
+
 func (m Model) GetAllSchool() (*[]School, error) {
 	var schools []School
 	tx := m.Db.Preload("Students").Begin()
@@ -11,7 +13,7 @@ func (m Model) GetAllSchool() (*[]School, error) {
 	return &schools, nil
 }
 
-func (m Model) GetSchoolbyID(id uint64) (*School, error) {
+func (m Model) GetSchoolbyID(id uuid.UUID) (*School, error) {
 	var school *School
 	tx := m.Db.Preload("Students").Begin()
 	if err := tx.Where("id = ?", id).Find(school).Error; err != nil {
@@ -33,7 +35,7 @@ func (m Model) AddSchool(school *School) error {
 	return nil
 }
 
-func (m Model) DeleteSchool(id uint64) error {
+func (m Model) DeleteSchool(id uuid.UUID) error {
 	tx := m.Db.Preload("Students").Begin()
 	if err := tx.Where("id = ?", id).Delete(&School{}).Error; err != nil {
 		tx.Rollback()
@@ -43,7 +45,7 @@ func (m Model) DeleteSchool(id uint64) error {
 	return nil
 }
 
-func (m Model) AddStudent4School(student *Student, id uint64) error {
+func (m Model) AddStudent4School(student *Student, id uuid.UUID) error {
 	var school *School
 	tx := m.Db.Begin()
 
@@ -64,4 +66,18 @@ func (m Model) AddStudent4School(student *Student, id uint64) error {
 
 	tx.Commit()
 	return nil
+}
+
+//テスト時に使う関数
+func (m Model) TestGetFirstSchool() (*School, error) {
+	var school *School
+	tx := m.Db.Preload("Students").Begin()
+
+	if err := tx.First(school).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
+	return school, nil
 }

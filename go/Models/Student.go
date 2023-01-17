@@ -1,5 +1,7 @@
 package Models
 
+import "github.com/google/uuid"
+
 func (m Model) GetStudentbySchoolAndGrade(school string, grade string) (*[]Student, error) {
 	var students []Student
 	tx := m.Db.Preload("RestDates").Begin()
@@ -13,7 +15,7 @@ func (m Model) GetStudentbySchoolAndGrade(school string, grade string) (*[]Stude
 }
 
 //IDから生徒情報取得
-func (m Model) GetStudentbyID(id uint64) (*Student, error) {
+func (m Model) GetStudentbyID(id uuid.UUID) (*Student, error) {
 	var student *Student
 	tx := m.Db.Begin()
 	if err := tx.Where("id = ?", id).First(student).Error; err != nil {
@@ -68,7 +70,7 @@ func DecrementCount(student *Student, sub string) *Student {
 }
 
 //休んだ日の追加
-func (m Model) AddRestDate4Student(rdate *RestDate, id uint64) error {
+func (m Model) AddRestDate4Student(rdate *RestDate, id uuid.UUID) error {
 	var student *Student
 	tx := m.Db.Preload("RestDates").Begin()
 
@@ -93,7 +95,7 @@ func (m Model) AddRestDate4Student(rdate *RestDate, id uint64) error {
 }
 
 //休んだ日の削除
-func (m Model) DeleteRestFromStudent(rdate *RestDate, id uint64) error {
+func (m Model) DeleteRestFromStudent(rdate *RestDate, id uuid.UUID) error {
 	var student *Student
 	tx := m.Db.Preload("RestDates").Begin()
 
@@ -119,7 +121,7 @@ func (m Model) DeleteRestFromStudent(rdate *RestDate, id uint64) error {
 }
 
 //振替回数を返す
-func (m Model) TransferCount(id uint64) (TransferCounts, error) {
+func (m Model) TransferCount(id uuid.UUID) (TransferCounts, error) {
 	var student *Student
 
 	tx := m.Db.Preload("RestDates").Begin()
