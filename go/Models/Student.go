@@ -25,7 +25,7 @@ func (m Model) GetStudentbySchoolAndGrade(schoolID uuid.UUID, grade string) (*[]
 func (m Model) GetStudentbyID(id uuid.UUID) (*Student, error) {
 	var student *Student
 	tx := m.Db.Preload("RestDates").Begin()
-	if err := tx.Where("id = ?", id).First(student).Error; err != nil {
+	if err := tx.Where("id = ?", id).First(&student).Error; err != nil {
 		tx.Rollback()
 		return student, err
 	}
