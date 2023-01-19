@@ -68,6 +68,29 @@ func (m Model) AddStudent4School(student *Student, id uuid.UUID) error {
 	return nil
 }
 
+func (m Model) DeleteStudentFromSchool(student *Student, id uuid.UUID) error {
+	var school *School
+	tx := m.Db.Preload("Students").Begin()
+
+	if err := tx.Where("id = ?", id).First(&school).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	
+	if err := m.Db.Model(school).Association("Students").Delete(student); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Save(school).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
 //テスト時に使う関数
 func (m Model) TestGetFirstSchool(id uuid.UUID) (*School, error) {
 	var school *School

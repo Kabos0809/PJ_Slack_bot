@@ -2,14 +2,21 @@ package Models
 
 import "github.com/google/uuid"
 
-func (m Model) GetStudentbySchoolAndGrade(school string, grade string) (*[]Student, error) {
+func (m Model) GetStudentbySchoolAndGrade(schoolID uuid.UUID, grade string) (*[]Student, error) {
 	var students []Student
-	tx := m.Db.Preload("RestDates").Begin()
-	if err := tx.Where("School = ?", school).Where("Grade = ?", grade).Find(&students).Error; err != nil {
+	var school *School
+	tx := m.Db.Preload("Students").Begin()
+	if err := tx.Where("id = ?", schoolID).First(&school).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 	tx.Commit()
+
+	for _, s := range school.Students {
+		if s.Grade == grade {
+			students = append(students, s)
+		}
+	}
 
 	return &students, nil
 }
@@ -17,7 +24,7 @@ func (m Model) GetStudentbySchoolAndGrade(school string, grade string) (*[]Stude
 //IDから生徒情報取得
 func (m Model) GetStudentbyID(id uuid.UUID) (*Student, error) {
 	var student *Student
-	tx := m.Db.Begin()
+	tx := m.Db.Preload("RestDates").Begin()
 	if err := tx.Where("id = ?", id).First(student).Error; err != nil {
 		tx.Rollback()
 		return student, err
@@ -39,9 +46,9 @@ func (m Model) CreateStudent(student *Student) error {
 }
 
 //生徒情報の削除
-func (m Model) DeleteStudent(student *Student, school *School) error {
-	tx := m.Db.Begin()
-	if err := tx.Where("id = ?", student.ID).Delete(&Student{}).Error; err != nil {
+func (m Model) DeleteStudent(id uuid.UUID) error {
+	tx := m.Db.Preload("RestDates").Begin()
+	if err := tx.Where("id = ?", id).Delete(&Student{}).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
