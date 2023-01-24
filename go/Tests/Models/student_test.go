@@ -12,14 +12,8 @@ import (
 }*/
 
 
-func TestCrateStudent(t *testing.T) {
-	if err := m.AddSchool(&testSchool_1); err != nil {
-	t.Fatalf("[FAIL] Failed to Add School: %s", err)
-	}	
-	if err := m.AddSchool(&testSchool_2); err != nil {
-	t.Fatalf("[FAIL] Failed to Add School: %s", err)
-	}	
-	for _, s := range testStudents {
+func TestCreateStudent(t *testing.T) {
+	for _, s := range testStudents_1 {
 		if err := m.CreateStudent(&s); err != nil {
 			t.Fatalf("[FAIL] Failed to Create Student: %s", err)
 		}
@@ -42,18 +36,25 @@ func TestGetStudent(t *testing.T) {
 	fmt.Println(*students_1)
 	fmt.Println(*students_2)
 
-	student, err := m.GetStudentbyID(testStudents[2].ID)
+	student, err := m.GetStudentbyID(testStudents_1[2].ID)
 	if err != nil {
 		t.Fatalf("[FAIL] Failed to Get Student by ID: %s", err)
 	}
 
 	fmt.Println(*student)
+
+	transfer, err := m.TransferCount(testStudents_2[0].ID)
+	if err != nil {
+		t.Fatalf("[FAIL] Failed to Get Transfer Count: %s", err)
+	}
+
+	fmt.Println(transfer)
 }
 
 func TestDeleteStudent(t *testing.T) {
 	defer sqldb.Close()
 
-	for _, s := range testStudents {
+	for _, s := range testStudents_1 {
 		if err := m.DeleteStudentFromSchool(&s, s.SchoolID); err != nil {
 			t.Fatalf("[FAIL] Failed to Delete Student from School: %s", err)
 		}

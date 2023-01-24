@@ -5,8 +5,10 @@ import (
 	"github.com/kabos0809/slack_bot/go/Models"
 )
 
+//学年
 var grades = []string{"小1", "小2", "小3", "小4", "小5", "小6", "中1", "中2", "中3", "高校生"}
 
+//一応エラー発生時に使う予定だが、そもそもエラーが発生した際にエラーメッセージを送信することができないかもしれないので使わない可能性大
 const (
 	NotFound = 404
 	InternalServerError = 500
@@ -17,7 +19,7 @@ const (
 	SchoolandGradeSelect = "school_and_grade_select"
 )
 
-//講師向けブロック
+//講師向けブロックを作成する関数
 func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
 	descText := slack.NewTextBlockObject("mrkdwn", "*学年*と*学校*を選択してください.", true, true)
 	descTextSection := slack.NewSectionBlock(descText, nil, nil)
@@ -61,7 +63,7 @@ func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
 	return blocks
 }
 
-//社員向けブロック
+//社員向けブロックを作成する関数
 func createSelectBlock4Employee() slack.MsgOption {
 	descText := slack.NewTextBlockObject("mrkdwn", "何を行いますか？", true, true)
 	descTextSection := slack.NewSectionBlock(descText, nil, nil)

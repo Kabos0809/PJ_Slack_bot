@@ -30,6 +30,23 @@ func (m Model) GetRestDatebyID(id uuid.UUID) (*RestDate, error) {
 	return restdate, nil
 }
 
+func (m Model) GetRestDateFromStudent(studentID uuid.UUID) (*[]RestDate, error) {
+	var restdates []RestDate
+	var student *Student
+	tx := m.Db.Preload("RestDates").Begin()
+	if err := tx.Where("id = ?", studentID).First(&student).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	tx.Commit()
+
+	for _, r := range student.RestDates {
+		restdates = append(restdates, r)
+	}
+
+	return &restdates, nil
+}
+
 //休んだ日の登録
 func (m Model) CreateRestDate(rdate *RestDate) error {
 	tx := m.Db.Begin()

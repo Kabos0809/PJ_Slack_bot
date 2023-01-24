@@ -19,6 +19,7 @@ var slack_signing_secret string = os.Getenv("SLACK_SIGNING_SECRET")
 ログにエラーメッセージを表示するが、200を返している。
 */
 
+//メンションされた際の処理
 func MentionedHandler(w http.ResponseWriter, r *http.Request, api *slack.Client, m Models.Model) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

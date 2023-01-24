@@ -9,7 +9,7 @@ type Student struct {
 	Name string `gorm:"not null;" binding:"required"`
 	Grade string `gorm:"not null;" binding:"required"`
 	SchoolID uuid.UUID
-	RestDates []RestDate `gorm:"foreignKey:StudentID;references:ID; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	RestDates []RestDate `gorm:"foreignKey:StudentID; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	//振替予定のリストはリリース後拡張予定
 	//Schedules []TransferSchedules `gorm:"foreignKey: ID"`
 	MathCounts uint64 `gorm:"not null; default: 0;"`

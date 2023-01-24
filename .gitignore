@@ -1,4 +1,4 @@
-.env
-slack_plan.txt
 
+slack_plan.txt
 /go/.env
+/go/.air.toml
