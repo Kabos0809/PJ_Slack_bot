@@ -1,5 +1,0 @@
-build:
-  docker:
-    web: ./docker/go/Dockerfile
-run:
-  web: /slack
