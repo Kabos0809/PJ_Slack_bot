@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	godotenv.Load("../.env")
+	godotenv.Load(".env")
 	api := slack.New(os.Getenv("SLACK_BOT_TOKEN"))
 	
 	dsn := Config.DbUrl()

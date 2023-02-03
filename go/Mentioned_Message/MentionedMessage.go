@@ -57,7 +57,7 @@ func MentionedHandler(w http.ResponseWriter, r *http.Request, api *slack.Client,
 	}
 	switch ev := eventsAPIEvent.InnerEvent.Data.(type) {
 	case *slackevents.AppMentionEvent:
-		msg := createSelectBlock4Teachers(m)
+		msg := createSelectBlock4Employee()
 		fallbackText := slack.MsgOptionText("This client is not supported.", false)
 
 		if _, err := api.PostEphemeral(ev.Channel, ev.User, fallbackText, msg); err != nil {
@@ -70,25 +70,3 @@ func MentionedHandler(w http.ResponseWriter, r *http.Request, api *slack.Client,
 		return
 	}
 }
-
-/*
-func verify(r *http.Request, sc string) error {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return err
-	}
-	header := http.Header{}
-	for k, v := range r.Header {
-		for _, s := range v	{
-			header.Set(k, s)
-		}
-	}
-	sv, err := slack.NewSecretsVerifier(header, sc)
-	if err != nil {
-		return err
-	}
-
-	sv.Write(body)
-	return sv.Ensure()
-}
-*/
