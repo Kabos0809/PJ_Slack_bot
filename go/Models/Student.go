@@ -35,6 +35,7 @@ func (m Model) GetStudentbyID(id uuid.UUID) (*Student, error) {
 
 //生徒情報の登録
 func (m Model) CreateStudent(student *Student) error {
+	student.Name = student.LastName + student.FirstName
 	tx := m.Db.Begin()
 	if err := tx.Create(student).Error; err != nil {
 		tx.Rollback()

@@ -46,13 +46,14 @@ func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Clien
 			msg, err := StudentListHandle(payload, school, grade)
 			if _, _, _, err := api.SendMessage("", payload.ResponseURL, fallbackText, msg); err != nil {
 				log.Printf("[ERROR] Failed to handle school button push action: %s", err)
-				w,WriteHeader(200)
+				w.WriteHeader(200)
 				return
 			}
+			return
 		}
 		switch payload.ActionCallback.BlockActions[0].Value {
 		case "school":
-			msg, err := SchoolButtonPushedActionHandle(payload)
+			msg := SchoolButtonPushedActionHandle()
 			if err != nil {
 				log.Printf("[ERROR] Failed to handle school button push action: %s", err)
 				w.WriteHeader(200)
@@ -65,7 +66,7 @@ func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Clien
 			}
 			return
 		case "restdate":
-			msg, err := RestDateButtonPushedActionHandle(payload)
+			msg := RestDateButtonPushedActionHandle()
 			if err != nil {
 				log.Printf("[ERROR] Failed to handle restdate button push action: %s", err)
 				w.WriteHeader(200)
@@ -78,7 +79,7 @@ func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Clien
 			}
 			return
 		case "student":
-			msg, err := StudentButtonPushedActionHandle(payload)
+			msg := StudentButtonPushedActionHandle()
 			if err != nil {
 				log.Printf("[ERROR] Failed to handle student button push action: %s", err)
 				w.WriteHeader(200)
@@ -89,10 +90,24 @@ func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Clien
 				w.WriteHeader(200)
 				return
 			}
+		/*
 		case "TransferCount":
 			msg, err := TransferCountPushedActionHandle(payload)
 			if err != nil {
 				log.Printf("[ERROR] Failed to handle student button push action: %s", err)
+				w.WriteHeader(200)
+				return
+			}
+			if _, _, _, err := api.SendMessage("", payload.ResponseURL, fallbackText, msg); err != nil {
+				log.Printf("[ERROR] Failed to send message: %s", err)
+				w.WriteHeader(200)
+				return
+			}
+		*/
+		default:
+			msg, err := CheckCountActionHandle(payload, m)
+			if err != nil {
+				log.Printf("[ERROR] Failed to handle check count action handle: %s", err)
 				w.WriteHeader(200)
 				return
 			}

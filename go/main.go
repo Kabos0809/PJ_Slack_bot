@@ -12,6 +12,7 @@ import (
 	"github.com/kabos0809/slack_bot/go/Models"
 	"github.com/kabos0809/slack_bot/go/Config"
 	"github.com/kabos0809/slack_bot/go/Mentioned_Message"
+	"github.com/kabos0809/slack_bot/go/Interactive_Message"
 	"github.com/kabos0809/slack_bot/go/Middleware"
 )
 
@@ -40,9 +41,9 @@ func main() {
 	http.HandleFunc("/slack/mentioned", Middleware.Verify(func (w http.ResponseWriter, r *http.Request) {
 		Mentioned_Message.MentionedHandler(w, r, api, m)
 	}))
-	/*http.HandleFunc("/slack/Ineractive", Middleware.Verify(func (w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/slack/Ineractive", Middleware.Verify(func (w http.ResponseWriter, r *http.Request) {
 		Interactive_Message.InteractiveHandler(w, r, api, m)
-	}))*/
+	}))
 	/*http.HandleFunc("/RestDate/list", Middleware.JWTCheck(func (w http.ResponseWriter, r *http.Request) {
 		ApiHandlers.ListHandler(w, r, m)
 	}))*/
