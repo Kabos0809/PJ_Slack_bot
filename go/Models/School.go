@@ -35,6 +35,16 @@ func (m Model) AddSchool(school *School) error {
 	return nil
 }
 
+func (m Model) UpdateSchool(school *School) error {
+	tx := m.Db.Begin()
+	if err := tx.Save(school).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
 func (m Model) DeleteSchool(id uuid.UUID) error {
 	tx := m.Db.Preload("Students").Begin()
 	if err := tx.Where("id = ?", id).Delete(&School{}).Error; err != nil {

@@ -46,6 +46,17 @@ func (m Model) CreateStudent(student *Student) error {
 	return nil
 }
 
+func (m Model) UpdateStudent(student *Student) error {
+	tx := m.Db.Begin()
+	if err := tx.Save(student).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
 //生徒情報の削除
 func (m Model) DeleteStudent(id uuid.UUID) error {
 	tx := m.Db.Preload("RestDates").Begin()
