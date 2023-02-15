@@ -2,7 +2,7 @@ package Models
 
 import "github.com/google/uuid"
 
-func (m Model) GetStudentbySchoolAndGrade(schoolID uuid.UUID, grade string) (*[]Student, error) {
+func (m Model) GetStudentbySchoolAndGrade(schoolID uuid.UUID, grade string) ([]Student, error) {
 	var students []Student
 	var school *School
 	tx := m.Db.Preload("Students").Begin()
@@ -18,7 +18,19 @@ func (m Model) GetStudentbySchoolAndGrade(schoolID uuid.UUID, grade string) (*[]
 		}
 	}
 
-	return &students, nil
+	return students, nil
+}
+
+//学校から生徒のリストを取得する関数
+func (m Model) GetStudentbyGrade(grade string) ([]Student, error) {
+	var students []Student
+	tx := m.Db.Preload("RestDates").Begin()
+	if err := tx.Where("Grade = ?", grade).Find(&students).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	tx.Commit()
+	return students, nil
 }
 
 //IDから生徒情報取得

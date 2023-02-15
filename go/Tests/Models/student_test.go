@@ -33,8 +33,8 @@ func TestGetStudent(t *testing.T) {
 		t.Fatalf("[FAIL] Failed to Get Student From School: %s", err)
 	}
 
-	fmt.Println(*students_1)
-	fmt.Println(*students_2)
+	fmt.Println(students_1)
+	fmt.Println(students_2)
 
 	student, err := m.GetStudentbyID(testStudents_1[2].ID)
 	if err != nil {

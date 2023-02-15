@@ -57,7 +57,7 @@ func MentionedHandler(w http.ResponseWriter, r *http.Request, api *slack.Client,
 	}
 	switch ev := eventsAPIEvent.InnerEvent.Data.(type) {
 	case *slackevents.AppMentionEvent:
-		msg := createSelectBlock4Employee()
+		msg := createSelectBlock4Teachers(m)
 		fallbackText := slack.MsgOptionText("This client is not supported.", false)
 
 		if _, err := api.PostEphemeral(ev.Channel, ev.User, fallbackText, msg); err != nil {

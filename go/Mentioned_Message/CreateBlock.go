@@ -8,7 +8,6 @@ import (
 //学年
 var grades = []string{"小1", "小2", "小3", "小4", "小5", "小6", "中1", "中2", "中3", "高校生"}
 
-//一応エラー発生時に使う予定だが、そもそもエラーが発生した際にエラーメッセージを送信することができないかもしれないので使わない可能性大
 const (
 	NotFound = 404
 	InternalServerError = 500
@@ -21,44 +20,18 @@ const (
 
 //講師向けブロックを作成する関数
 func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
-	descText := slack.NewTextBlockObject("mrkdwn", "*学年*と*学校*を選択してください.", false, false)
+	descText := slack.NewTextBlockObject("mrkdwn", "*学年*と*学校*を選択してください", false, false)
 	descTextSection := slack.NewSectionBlock(descText, nil, nil)
 
 	dividerBlock := slack.NewDividerBlock()
 	
-	schools, err := m.GetAllSchool()
-	if err != nil {
-		errBlock := CreateErrorMsgBlock(InternalServerError, SelectSchool)
-		return errBlock
-	}
+	checkCountButtonText := slack.NewTextBlockObject("plain_text", "Do it", false, false)
+	checkCountButtonElement := slack.NewButtonBlockElement("actioncheckCount_T", "checkCount_T", checkCountButtonText)
+	checkCountAccessory := slack.NewAccessory(checkCountButtonElement)
+	checkCountSectionText := slack.NewTextBlockObject("mrkdwn", "*生徒の残り振替回数*の確認ができます", false, false)
+	checkCountSection := slack.NewSectionBlock(checkCountSectionText, nil, checkCountAccessory)
 
-	school_opt := make([]*slack.OptionBlockObject, 0, len(*schools))
-
-	if len(*schools) != 0 {
-		for _, v := range *schools {
-			optText := slack.NewTextBlockObject("plain_text", v.Name, false, false)
-			school_opt = append(school_opt, slack.NewOptionBlockObject(v.ID.String(), nil, optText))
-		}
-	} else {
-		errBlock := CreateErrorMsgBlock(NotFound, SelectSchool)
-		return errBlock
-	}
-
-	s_placeholder := slack.NewTextBlockObject("plain_text", "学校を選択してください", false, false)
-	school_select := slack.NewOptionsSelectBlockElement(slack.OptTypeStatic, s_placeholder, "", school_opt...)
-
-	grades_opt := make([]*slack.OptionBlockObject, 0, len(grades))
-	for _, v := range grades {
-		optText := slack.NewTextBlockObject("plain_text", v, false, false)
-		grades_opt = append(grades_opt, slack.NewOptionBlockObject(v, nil, optText))
-	}
-
-	g_placeholder := slack.NewTextBlockObject("plain_text", "学年を選択してください", false, false)
-	grade_select := slack.NewOptionsSelectBlockElement(slack.OptTypeStatic, g_placeholder, "", grades_opt...)
-
-	actionBlock := slack.NewActionBlock(SchoolandGradeSelect, school_select, grade_select)
-
-	blocks := slack.MsgOptionBlocks(descTextSection, dividerBlock, actionBlock)
+	blocks := slack.MsgOptionBlocks(descTextSection, dividerBlock, checkCountSection)
 
 	return blocks
 }

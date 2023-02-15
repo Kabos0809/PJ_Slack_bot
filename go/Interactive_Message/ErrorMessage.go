@@ -19,6 +19,7 @@ func CreateErrorMsgBlock(status int) slack.MsgOption {
 		errText = slack.MsgOptionText("*サーバー内部でエラーが発生しました*\n数学科 鶴賀までご連絡ください。 :pray:", false)
 	case BadRequest:
 		errText = slack.MsgOptionText("*不正なリクエストです*", false)
-
+	}
+	
 	return errText
 }

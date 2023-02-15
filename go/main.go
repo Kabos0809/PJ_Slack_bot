@@ -19,11 +19,12 @@ import (
 func main() {
 	godotenv.Load(".env")
 	api := slack.New(os.Getenv("SLACK_BOT_TOKEN"))
-	
+
 	dsn := Config.DbUrl()
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
+
 	if err != nil {
 		panic(err)
 	}
@@ -35,13 +36,12 @@ func main() {
 		panic(err)
 	}
 
-
 	m := Models.Model{Db: db}
 
 	http.HandleFunc("/slack/mentioned", Middleware.Verify(func (w http.ResponseWriter, r *http.Request) {
 		Mentioned_Message.MentionedHandler(w, r, api, m)
 	}))
-	http.HandleFunc("/slack/Ineractive", Middleware.Verify(func (w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/slack/actions", Middleware.Verify(func (w http.ResponseWriter, r *http.Request) {
 		Interactive_Message.InteractiveHandler(w, r, api, m)
 	}))
 	/*http.HandleFunc("/RestDate/list", Middleware.JWTCheck(func (w http.ResponseWriter, r *http.Request) {
