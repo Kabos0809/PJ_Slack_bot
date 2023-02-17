@@ -20,7 +20,7 @@ const (
 
 //講師向けブロックを作成する関数
 func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
-	descText := slack.NewTextBlockObject("mrkdwn", "*学年*と*学校*を選択してください", false, false)
+	descText := slack.NewTextBlockObject("mrkdwn", "*学年*と*学校*を選択してください\n", false, false)
 	descTextSection := slack.NewSectionBlock(descText, nil, nil)
 
 	dividerBlock := slack.NewDividerBlock()
@@ -28,7 +28,7 @@ func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
 	checkCountButtonText := slack.NewTextBlockObject("plain_text", "Do it", false, false)
 	checkCountButtonElement := slack.NewButtonBlockElement("actioncheckCount_T", "checkCount_T", checkCountButtonText)
 	checkCountAccessory := slack.NewAccessory(checkCountButtonElement)
-	checkCountSectionText := slack.NewTextBlockObject("mrkdwn", "*生徒の残り振替回数*の確認ができます", false, false)
+	checkCountSectionText := slack.NewTextBlockObject("mrkdwn", "*振替回数確認*\n生徒の残り振替回数の確認ができます", false, false)
 	checkCountSection := slack.NewSectionBlock(checkCountSectionText, nil, checkCountAccessory)
 
 	blocks := slack.MsgOptionBlocks(descTextSection, dividerBlock, checkCountSection)
@@ -38,19 +38,19 @@ func createSelectBlock4Teachers(m Models.Model) slack.MsgOption {
 
 //社員向けブロックを作成する関数
 func createSelectBlock4Employee() slack.MsgOption {
-	descText := slack.NewTextBlockObject("mrkdwn", "何を行いますか？", false, false)
+	descText := slack.NewTextBlockObject("mrkdwn", "*何を行いますか？*\n", false, false)
 	descTextSection := slack.NewSectionBlock(descText, nil, nil)
 
 	dividerBlock := slack.NewDividerBlock()
 	
 	RestDateButtonText := slack.NewTextBlockObject("plain_text", "Do it", false, false)
-	RestDateButtonElement := slack.NewButtonBlockElement("actionRestDate", "RestDate", RestDateButtonText)
+	RestDateButtonElement := slack.NewButtonBlockElement("actionRestDate", "restdate", RestDateButtonText)
 	RestDateAccessory := slack.NewAccessory(RestDateButtonElement)
 	RestDateSectionText := slack.NewTextBlockObject("mrkdwn", "*欠席の登録*\n欠席登録ができます", false, false)
 	RestDateSection := slack.NewSectionBlock(RestDateSectionText, nil, RestDateAccessory)
 
 	checkTransferCountButtonText := slack.NewTextBlockObject("plain_text", "Do it", false, false)
-	checkTransferCountButtonElement := slack.NewButtonBlockElement("actionCheckTransferCount", "TransferCount", checkTransferCountButtonText)
+	checkTransferCountButtonElement := slack.NewButtonBlockElement("actionCheckTransferCount", "checkCount_T", checkTransferCountButtonText)
 	checkTransferCountAccessory := slack.NewAccessory(checkTransferCountButtonElement)
 	checkTransferCountSectionText := slack.NewTextBlockObject("mrkdwn", "*残り振替回数確認*\n特定の生徒の残り振替回数の確認ができます", false, false)
 	checkTransferCountSection := slack.NewSectionBlock(checkTransferCountSectionText, nil, checkTransferCountAccessory)

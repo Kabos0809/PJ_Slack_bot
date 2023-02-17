@@ -12,7 +12,7 @@ var grades = []string{"小1", "小2", "小3", "小4", "小5", "小6", "中1", "�
 func SelectHandle(m Models.Model) *slack.ModalViewRequest {
 	barText := slack.NewTextBlockObject("plain_text", "-------------", false, false)
 
-	dstText := slack.NewTextBlockObject("mrkdwn", "*学校*・*学年*を選択してください", false, false)
+	dstText := slack.NewTextBlockObject("mrkdwn", "*学校*・*学年*を選択してください\n", false, false)
 	dstTextSection := slack.NewSectionBlock(dstText, nil, nil)
 
 	dividerBlock := slack.NewDividerBlock()
@@ -21,11 +21,8 @@ func SelectHandle(m Models.Model) *slack.ModalViewRequest {
 
 	school_opt := make([]*slack.OptionBlockObject, 0, len(*schools))
 
-	optText := slack.NewTextBlockObject("plain_text", "選択しない", false, false)
-	school_opt = append(school_opt, slack.NewOptionBlockObject("選択しない", optText, nil))
-
 	for _, v := range *schools {
-		optText = slack.NewTextBlockObject("plain_text", v.Name, false, false)
+		optText := slack.NewTextBlockObject("plain_text", v.Name, false, false)
 		school_opt = append(school_opt, slack.NewOptionBlockObject(v.ID.String(), optText, nil))
 	}
 
@@ -65,38 +62,16 @@ func SelectHandle(m Models.Model) *slack.ModalViewRequest {
 	return &modal
 }
 
-func StudentListHandle(payload slack.InteractionCallback, m Models.Model) slack.MsgOption {
+func StudentListHandle(payload slack.InteractionCallback, m Models.Model, t string) slack.MsgOption {
 	barText := slack.NewTextBlockObject("plain_text", "-------------", false, false)
 	
-	dstText := slack.NewTextBlockObject("mrkdwn", "*生徒*を選択してください", false, false)
+	dstText := slack.NewTextBlockObject("mrkdwn", "生徒を選択してください\n", false, false)
 	dstTextSection := slack.NewSectionBlock(dstText, nil, nil)
 
 	dividerBlock := slack.NewDividerBlock()
 
 	school := payload.View.State.Values[selectSchool][selectSchool].SelectedOption.Value
 	grade := payload.View.State.Values[selectGrade][selectGrade].SelectedOption.Value
-
-	if (school == "選択しない") {
-		students, err := m.GetStudentbyGrade(grade)
-		if err != nil {
-			errBlock := CreateErrorMsgBlock(InternalServerError)
-			return errBlock
-		}
-		students_opt := make([]*slack.OptionBlockObject, 0, len(students))
-
-		for _, s := range students {
-			optText := slack.NewTextBlockObject("plain_text", s.Name, false, false)
-			students_opt = append(students_opt, slack.NewOptionBlockObject(s.ID.String(), optText, nil))
-		}
-
-		student_select := slack.NewOptionsSelectBlockElement(slack.OptTypeStatic, barText, selectStudent, students_opt...)
-
-		actionBlock := slack.NewActionBlock(selectStudent, student_select)
-
-		blocks := slack.MsgOptionBlocks(dstTextSection, dividerBlock, actionBlock)
-
-		return blocks
-	}
 
 	school_id, err := uuid.Parse(school)
 	if err != nil {
@@ -108,19 +83,39 @@ func StudentListHandle(payload slack.InteractionCallback, m Models.Model) slack.
 	if err != nil {
 		errBlock := CreateErrorMsgBlock(InternalServerError)
 		return errBlock
+	} else if len(*students) == 0 {
+		errBlock := CreateErrorMsgBlock(NotFound)
+		return errBlock
 	}
-	students_opt := make([]*slack.OptionBlockObject, 0, len(students))
+	students_opt := make([]*slack.OptionBlockObject, 0, len(*students))
 
-	for _, s := range students {
+	for _, s := range *students {
 		optText := slack.NewTextBlockObject("plain_text", s.Name, false, false)
 		students_opt = append(students_opt, slack.NewOptionBlockObject(s.ID.String(), optText, nil))
 	}
 
-	student_select := slack.NewOptionsSelectBlockElement(slack.OptTypeStatic, barText, selectStudent, students_opt...)
+	var blocks slack.MsgOption
 
-	actionBlock := slack.NewActionBlock(selectStudent, student_select)
+	switch t {
+	case checkCount:
+		student_select := slack.NewOptionsSelectBlockElement(slack.OptTypeStatic, barText, selectStudent, students_opt...)
 
-	blocks := slack.MsgOptionBlocks(dstTextSection, dividerBlock, actionBlock)
+		actionBlock := slack.NewActionBlock(selectStudent, student_select)
 
-	return blocks
+		blocks = slack.MsgOptionBlocks(dstTextSection, dividerBlock, actionBlock)
+
+		return blocks
+	case addRestDate:
+		student_select := slack.NewOptionsSelectBlockElement(slack.OptTypeStatic, barText, addRestDateSelectStudent, students_opt...)
+
+		actionBlock := slack.NewActionBlock(addRestDateSelectStudent, student_select)
+
+		blocks = slack.MsgOptionBlocks(dstTextSection, dividerBlock, actionBlock)
+
+		return blocks
+	default:
+		blocks = CreateErrorMsgBlock(InternalServerError)
+
+		return blocks
+	}
 }

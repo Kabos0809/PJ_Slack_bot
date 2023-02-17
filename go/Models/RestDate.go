@@ -1,7 +1,6 @@
 package Models
 
 import (
-	"errors"
 	"github.com/google/uuid"
 )
 
@@ -50,15 +49,11 @@ func (m Model) GetRestDateFromStudent(studentID uuid.UUID) (*[]RestDate, error) 
 //休んだ日の登録
 func (m Model) CreateRestDate(rdate *RestDate) error {
 	tx := m.Db.Begin()
-	if rdate.Subject != "国語" && rdate.Subject != "数学" && rdate.Subject != "英語" {
-		err := errors.New("[ERROR] Subjects must be Japanese, Mathematics or English.")
-		return err
-	}
+	rdate.ID = uuid.New()
 	if err := tx.Create(rdate).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-
 	tx.Commit()
 	return nil
 }

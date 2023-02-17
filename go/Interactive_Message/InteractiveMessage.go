@@ -13,52 +13,26 @@ import (
 	"github.com/kabos0809/slack_bot/go/Models"
 )
 
-var (
+const (
 	selectSchool = "selectSchool"
 	selectGrade = "selectGrade"
 	selectSchoolAndGrade = "selectSchoolAndGrade"
 	selectStudent = "selectStudent"
 	selectAction = "checkCount_T"
+	selectSchoolAndGrade4RestDate = "selectSchoolAndGrade4RestDate"
 	buttonPushedAction = "buttonPushedAction"
-	submitRestDateModal = "submitRestDateModal"
-	confirmRestDateModal = "confirmRestDateModal"
-	checkTransferCount = "checkTransferCount"
-	studentOperation = "studentOperation"
-	submitStudentModal = "submitStudentModal"
-	confirmStudentModal = "confirmStudentModal"
-	deleteStudent = "deleteStudent"
-	updateStudent = "updateStudent"
-	schoolOperation = "schoolOperation"
-	submitSchoolModal = "submitSchoolModal"
-	confirmSchoolModal = "confirmSchoolModal"
+	checkCount = "checkCount"
+	addSchool = "addSchool"
+	addRestDate = "addRestDate"
+	addStudent = "addStudent"
 )
 
 var fallbackText slack.MsgOption = slack.MsgOptionText("This client is not supported.", false)
 
 type privateMeta struct {
 	ChannelID string `json:"channel_id"`
-	school_data
-	restdate_data
-	student_data
+	StudentID string `json:"student_id"`
 }
-
-type school_data struct {
-	Name string `json:"name"`
-}
-
-type restdate_data struct {
-	studentID uuid.UUID `json:"student_id"`
-	date time.Time `json:"date"`
-	subject string `json:"subject"`
-}
-
-type student_data struct {
-	firstName string `json:"first_name"`
-	lastName string `json:"last_name"`
-	grade string `json:"grade"`
-	schoolID uuid.UUID `json:"school_id"`
-}
-
 //InteractiveMessageの送信
 func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Client, m Models.Model)  {
 	var payload slack.InteractionCallback
@@ -81,7 +55,7 @@ func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Clien
 			bytes, err := json.Marshal(params)
 			if err != nil {
 				msg := CreateErrorMsgBlock(InternalServerError)
-				if _, _, _, err := api.SendMessage(payload.Channel.ID, fallbackText, msg); err != nil {
+				if _, err := api.PostEphemeral(payload.Channel.ID, payload.User.ID, fallbackText, msg); err != nil {
 					log.Printf("[ERROR] Failed to send message: %s", err)
 					w.WriteHeader(200)
 					return
@@ -99,26 +73,41 @@ func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Clien
 		switch payload.ActionCallback.BlockActions[0].Value {
 		case "school":
 			msg := SchoolButtonPushedActionHandle()
-			if _, _, _, err := api.SendMessage(payload.Channel.ID, fallbackText, msg); err != nil {
+			if _, err := api.PostEphemeral(payload.Channel.ID, payload.User.ID, fallbackText, msg); err != nil {
 				log.Printf("[ERROR] Failed to send message: %s", err)
 				w.WriteHeader(200)
 				return
 			}
 			return
-		/*
 		case "add_school":
-			modal, err := AddSchoolModalHandle()
-			if err != nil {
-				log.Printf("[ERROR] Failed to handle to create add school modal")
-				w.WriteHeader(200)
-				return
+			modal := AddSchoolModalHandle()
+
+			modal.CallbackID = addSchool
+			modal.ExternalID = payload.User.ID + strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
+			
+			params := privateMeta{
+				ChannelID: payload.Channel.ID,
 			}
+
+			bytes, err := json.Marshal(params)
+			if err != nil {
+				msg := CreateErrorMsgBlock(InternalServerError)
+				if _, err := api.PostEphemeral(payload.Channel.ID, payload.User.ID, fallbackText, msg); err != nil {
+					log.Printf("[ERROR] Failed to send message: %s", err)
+					w.WriteHeader(200)
+					return
+				}
+			}
+
+			modal.PrivateMetadata = string(bytes)
+
 			if _, err := api.OpenView(payload.TriggerID, *modal); err != nil {
 				log.Printf("[ERROR] Failed to open modal: %s", err)
 				w.WriteHeader(200)
 				return
 			}
 			return
+		/*
 		case "update_school":
 			modal, err := UpdateSchoolModalHandle()
 			if err != nil {
@@ -134,7 +123,7 @@ func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Clien
 			return
 		case "delete_school":
 			msg := DeleteSchoolActionHandle()
-			if _, _, _, err := api.SendMessage(payload.Channel.ID, fallbackText, msg); err != nil {
+			if _, err := api.PostEphemeral(payload.Channel.ID, fallbackText, msg); err != nil {
 				log.Printf("[ERROR] Failed to send message: %s", err)
 				w.WriteHeader(200)
 				return
@@ -143,24 +132,41 @@ func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Clien
 		*/
 		case "restdate":
 			msg := RestDateButtonPushedActionHandle()
-			if _, _, _, err := api.SendMessage(payload.Channel.ID, fallbackText, msg); err != nil {
+			if _, err := api.PostEphemeral(payload.Channel.ID, payload.User.ID, fallbackText, msg); err != nil {
 				log.Printf("[ERROR] Failed to send message: %s", err)
 				w.WriteHeader(200)
 				return
 			}
 			return
-		/*
 		case "add_restdate":
-			modal, err := AddRestDateModalHandle()
+			modal := SelectHandle(m)
+
+			modal.CallbackID = selectSchoolAndGrade4RestDate
+			modal.ExternalID = payload.User.ID + strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
+			params := privateMeta{
+				ChannelID: payload.Channel.ID,
+			}
+			bytes, err := json.Marshal(params)
 			if err != nil {
-				log.Printf("[ERROR] Failed to handle to create add restdate modal: %s", err)
+				msg := CreateErrorMsgBlock(InternalServerError)
+				if _, err := api.PostEphemeral(payload.Channel.ID, payload.User.ID, fallbackText, msg); err != nil {
+					log.Printf("[ERROR] Failed to send message: %s", err)
+					w.WriteHeader(200)
+					return
+				}
+			}
+			modal.PrivateMetadata = string(bytes)
+
+			if _, err := api.OpenView(payload.TriggerID, *modal); err != nil {
+				log.Printf("[ERROR] Failed to open modal: %s", err)
 				w.WriteHeader(200)
 				return
 			}
 			return
+		/*
 		case "delete_restdate":
 			msg := DeleteRestDateActionHandle()
-			if _, _, _, err := api.SendMessage(payload.Channel.ID, fallbackText, msg); err != nil {
+			if _, err := api.PostEphemeral(payload.Channel.ID, fallbackText, msg); err != nil {
 				log.Printf("[ERROR] Failed to send message: %s", err)
 				w.WriteHeader(200)
 				return
@@ -169,34 +175,107 @@ func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Clien
 		*/
 		case "student":
 			msg := StudentButtonPushedActionHandle()
-			if _, _, _, err := api.SendMessage(payload.Channel.ID, fallbackText, msg); err != nil {
+			if _, err := api.PostEphemeral(payload.Channel.ID, payload.User.ID, fallbackText, msg); err != nil {
 				log.Printf("[ERROR] Failed to send message: %s", err)
 				w.WriteHeader(200)
 				return
 			}
-		/*
+			w.WriteHeader(200)
+			return
 		case "add_student":
-			modal, err := AddStudentModalHandle()
+			modal := AddStudentModalHandle(m)
+			
+			modal.CallbackID = addStudent
+			modal.ExternalID = payload.User.ID + strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
+
+			params := privateMeta{
+				ChannelID: payload.Channel.ID,
+			}
+
+			bytes, err := json.Marshal(params)
+			if err != nil {
+				msg := CreateErrorMsgBlock(InternalServerError)
+				if _, err := api.PostEphemeral(payload.Channel.ID, payload.User.ID, fallbackText, msg); err != nil {
+					log.Printf("[ERROR] Failed to send message: %s", err)
+					w.WriteHeader(200)
+					return
+				}
+			}
+
+			modal.PrivateMetadata = string(bytes)
+
 			if _, err := api.OpenView(payload.TriggerID, *modal); err != nil {
 				log.Printf("[ERROR] Failed to open modal: %s", err)
 				w.WriteHeader(200)
 				return
 			}
+			w.WriteHeader(200)
 			return
-		*/
 		default:
-			msg, err := CheckCountActionHandle(payload, m)
-			if err != nil {
-				log.Printf("[ERROR] Failed to handle check count action handle: %s", err)
+			switch payload.ActionCallback.BlockActions[0].ActionID {
+			case selectStudent:
+				msg, err := CheckCountActionHandle(payload, m)
+				if err != nil {
+					log.Printf("[ERROR] Failed to handle check count action handle: %s", err)
+					w.WriteHeader(200)
+					return
+				}
+				if _, err := api.PostEphemeral(payload.Channel.ID, payload.User.ID, fallbackText, msg); err != nil {
+					log.Printf("[ERROR] Failed to send message: %s", err)
+					w.WriteHeader(200)
+					return
+				}
+			case addRestDateSelectStudent:
+				modal := AddRestDateModalHandle(m)
+
+				modal.CallbackID = addRestDate
+				modal.ExternalID = payload.User.ID + strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
+				
+				params := privateMeta{
+					ChannelID: payload.Channel.ID,
+					StudentID: payload.ActionCallback.BlockActions[0].SelectedOption.Value,
+				}
+
+				log.Printf(params.StudentID)
+
+				bytes, err := json.Marshal(params)
+				if err != nil {
+					msg := CreateErrorMsgBlock(InternalServerError)
+					if _, err := api.PostEphemeral(payload.Channel.ID, payload.User.ID, fallbackText, msg); err != nil {
+						log.Printf("[ERROR] Failed to send message: %s", err)
+						w.WriteHeader(200)
+						return
+					}
+				}
+			
+				modal.PrivateMetadata = string(bytes)
+			
+				if _, err := api.OpenView(payload.TriggerID, *modal); err != nil {
+					log.Printf("[ERROR] Failed to open modal: %s", err)
+					w.WriteHeader(200)
+					return
+				}
 				w.WriteHeader(200)
 				return
 			}
-			if _, _, _, err := api.SendMessage(payload.Channel.ID, fallbackText, msg); err != nil {
-				log.Printf("[ERROR] Failed to send message: %s", err)
-				w.WriteHeader(200)
-				return
-			}
+			w.WriteHeader(200)
+			return
 		}
+	case selectSchoolAndGrade4RestDate:
+		var pMeta privateMeta
+		if err := json.Unmarshal([]byte(payload.View.PrivateMetadata), &pMeta); err != nil {
+			log.Printf("[ERROR] Failed to unmarshal json: %s", err)
+			w.WriteHeader(200)
+			return 
+		}
+
+		msg := StudentListHandle(payload, m, addRestDate)
+		if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, msg); err != nil {
+			log.Printf("[ERROR] Failed to send message: %s", err)
+			w.WriteHeader(200)
+			return
+		}
+		return
 	case selectSchoolAndGrade:
 		var pMeta privateMeta
 		if err := json.Unmarshal([]byte(payload.View.PrivateMetadata), &pMeta); err != nil {
@@ -205,38 +284,183 @@ func InteractiveHandler(w http.ResponseWriter, r *http.Request, api *slack.Clien
 			return 
 		}
 
-		msg := StudentListHandle(payload, m)
-		if _, _, _, err := api.SendMessage(pMeta.ChannelID, fallbackText, msg); err != nil {
+		msg := StudentListHandle(payload, m, checkCount)
+		if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, msg); err != nil {
 			log.Printf("[ERROR] Failed to send message: %s", err)
 			w.WriteHeader(200)
 			return
 		}
-	/*
-	case confirmRestDateModal:
-		err := ConfirmRestDateHandle(payload, m)
+		return
+	case addSchool:
+		var pMeta privateMeta
+		if err := json.Unmarshal([]byte(payload.View.PrivateMetadata), &pMeta); err != nil {
+			log.Printf("[ERROR] Failed to unmarshal json: %s", err)
+			w.WriteHeader(200)
+			return 
+		}
+
+		var school Models.School
+		school.Name = payload.View.State.Values[addSchool][addSchool].Value
+
+		err := m.AddSchool(&school)
 		if err != nil {
-			log.Printf("[ERROR] Failed to handle confirm rest date: %s", err)
+			log.Printf("[ERROR] Failed to add school: %s", err)
+			errMsg := CreateErrorMsgBlock(InternalServerError)
+			if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, errMsg); err != nil {
+				log.Printf("[ERROR] Failed to send message: %s", err)
+				w.WriteHeader(200)
+				return
+			}
+			w.WriteHeader(200)
+			return
+		}
+
+		msg := slack.MsgOptionText("学校の登録が完了しました", false)
+		if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, msg); err != nil {
+			log.Printf("[ERROR] Failed to send message: %s", err)
 			w.WriteHeader(200)
 			return
 		}
 		return
-	case confirmSchoolModal:
-		err := ConfirmSchoolHandle(payload, m)
-		if err != nil {
-			log.Printf("[ERROR] Failed to handle confirm school handle: %s", err)
+	case addRestDate:
+		var e error
+		var pMeta privateMeta
+		if err := json.Unmarshal([]byte(payload.View.PrivateMetadata), &pMeta); err != nil {
+			log.Printf("[ERROR] Failed to unmarshal json: %s", err)
+			w.WriteHeader(200)
+			return 
+		}
+
+		log.Printf(pMeta.ChannelID)
+		log.Printf(pMeta.StudentID)
+
+		var restdate Models.RestDate
+		restdate.StudentID, e = uuid.Parse(pMeta.StudentID)
+		restdate.Date, e = time.Parse("20060102", payload.View.State.Values[addRestDateDate][addRestDateDate].Value)
+		restdate.Subject = payload.View.State.Values[addRestDateSelectSubject][addRestDateSelectSubject].SelectedOption.Value
+		
+		if e != nil {
+			log.Printf("[ERROR] Failed to create restdate: %s", e)
+			errMsg := CreateErrorMsgBlock(InternalServerError)
+			if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, errMsg); err != nil {
+				log.Printf("[ERROR] Failed to send message: %s", err)
+				w.WriteHeader(200)
+				return
+			}
+			w.WriteHeader(200)
+			return
+		}
+
+		e = SucjectsVaridate(restdate.Subject)
+		if e != nil {
+			log.Printf("[ERROR] Invalid subject: %s", e)
+			errMsg := CreateErrorMsgBlock(InternalServerError)
+			if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, errMsg); err != nil {
+				log.Printf("[ERROR] Failed to send message: %s", err)
+				w.WriteHeader(200)
+				return
+			}
+			w.WriteHeader(200)
+			return
+		}
+
+		e = m.CreateRestDate(&restdate)
+		if e != nil {
+			log.Printf("[ERROR] Failed to create restdate: %s", e)
+			errMsg := CreateErrorMsgBlock(InternalServerError)
+			if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, errMsg); err != nil {
+				log.Printf("[ERROR] Failed to send message: %s", err)
+				w.WriteHeader(200)
+				return
+			}
+			w.WriteHeader(200)
+			return
+		}
+
+		e = m.AddRestDate4Student(&restdate, restdate.StudentID)
+		if e != nil {
+			log.Printf("[ERROR] Failed to add restdate for student: %s", e)
+			errMsg := CreateErrorMsgBlock(InternalServerError)
+			if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, errMsg); err != nil {
+				log.Printf("[ERROR] Failed to send message: %s", err)
+				w.WriteHeader(200)
+				return
+			}
+			w.WriteHeader(200)
+			return
+		}
+
+
+		msg := slack.MsgOptionText("欠席の登録が完了しました", false)
+
+		if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, msg); err != nil {
+			log.Printf("[ERROR] Failed to send message: %s", err)
 			w.WriteHeader(200)
 			return
 		}
 		return
-	case confirmStudentModal:
-		err := ConfirmStudentModal(payload, m)
+
+	case addStudent:
+		var e error
+		var pMeta privateMeta
+		if err := json.Unmarshal([]byte(payload.View.PrivateMetadata), &pMeta); err != nil {
+			log.Printf("[ERROR] Failed to unmarshal json: %s", err)
+			w.WriteHeader(200)
+			return 
+		}
+		
+		var student Models.Student
+		student.LastName = payload.View.State.Values[addStudentLastName][addStudentLastName].Value
+		student.FirstName = payload.View.State.Values[addStudentFirstName][addStudentFirstName].Value
+		student.SchoolID, e = uuid.Parse(payload.View.State.Values[addStudentSelectSchool][addStudentSelectSchool].SelectedOption.Value)
+		student.Grade = payload.View.State.Values[addStudentSelectGrade][addStudentSelectGrade].SelectedOption.Value
+		
+		if e != nil {
+			log.Printf("[ERROR] Failed to create student: %s", e)
+			errMsg := CreateErrorMsgBlock(InternalServerError)
+			if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, errMsg); err != nil {
+				log.Printf("[ERROR] Failed to send message: %s", err)
+				w.WriteHeader(200)
+				return
+			}
+			w.WriteHeader(200)
+			return
+		}
+
+		err := m.CreateStudent(&student)
 		if err != nil {
-			log.Printf("[ERROR] Failed to handle confirm student: %s", err)
+			log.Printf("[ERROR] Failed to create student: %s", err)
+			errMsg := CreateErrorMsgBlock(InternalServerError)
+			if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, errMsg); err != nil {
+				log.Printf("[ERROR] Failed to send message: %s", err)
+				w.WriteHeader(200)
+				return
+			}
+			w.WriteHeader(200)
+			return
+		}
+
+		err = m.AddStudent4School(&student, student.SchoolID)
+		if err != nil {
+			log.Printf("[ERROR] Failed to create student: %s", err)
+			errMsg := CreateErrorMsgBlock(InternalServerError)
+			if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, errMsg); err != nil {
+				log.Printf("[ERROR] Failed to send message: %s", err)
+				w.WriteHeader(200)
+				return
+			}
+			w.WriteHeader(200)
+			return
+		}
+
+		msg := slack.MsgOptionText("生徒の登録が完了しました", false)
+
+		if _, err := api.PostEphemeral(pMeta.ChannelID, payload.User.ID, fallbackText, msg); err != nil {
+			log.Printf("[ERROR] Failed to send message: %s", err)
 			w.WriteHeader(200)
 			return
 		}
 		return
-	*/
 	}	
 	return
 }
@@ -245,17 +469,20 @@ func CheckCallbackType(payload slack.InteractionCallback) string {
 	if payload.Type == slack.InteractionTypeBlockActions && payload.View.Hash == "" {
 		return buttonPushedAction
 	}
-	if payload.Type == slack.InteractionTypeViewSubmission && strings.Contains(payload.View.CallbackID, confirmRestDateModal) {
-		return confirmRestDateModal
-	}
-	if payload.Type == slack.InteractionTypeViewSubmission && strings.Contains(payload.View.CallbackID, confirmSchoolModal) {
-		return confirmSchoolModal
-	}
-	if payload.Type == slack.InteractionTypeViewSubmission && strings.Contains(payload.View.CallbackID, confirmStudentModal) {
-		return confirmStudentModal
+	if payload.Type == slack.InteractionTypeViewSubmission && strings.Contains(payload.View.CallbackID, selectSchoolAndGrade4RestDate) {
+		return selectSchoolAndGrade4RestDate
 	}
 	if payload.Type == slack.InteractionTypeViewSubmission && strings.Contains(payload.View.CallbackID, selectSchoolAndGrade) {
 		return selectSchoolAndGrade
+	}
+	if payload.Type == slack.InteractionTypeViewSubmission && strings.Contains(payload.View.CallbackID, addSchool) {
+		return addSchool
+	}
+	if payload.Type == slack.InteractionTypeViewSubmission && strings.Contains(payload.View.CallbackID, addStudent) {
+		return addStudent
+	}
+	if payload.Type == slack.InteractionTypeViewSubmission && strings.Contains(payload.View.CallbackID, addRestDate) {
+		return addRestDate
 	}
 	return ""
 }

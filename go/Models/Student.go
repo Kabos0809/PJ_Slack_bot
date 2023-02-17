@@ -2,27 +2,19 @@ package Models
 
 import "github.com/google/uuid"
 
-func (m Model) GetStudentbySchoolAndGrade(schoolID uuid.UUID, grade string) ([]Student, error) {
+func (m Model) GetStudentbySchoolAndGrade(schoolID uuid.UUID, grade string) (*[]Student, error) {
 	var students []Student
-	var school *School
-	tx := m.Db.Preload("Students").Begin()
-	if err := tx.Where("id = ?", schoolID).First(&school).Error; err != nil {
+	tx := m.Db.Preload("RestDates").Begin()
+	if err := tx.Where("school_id = ?", schoolID).Where("grade = ?", grade).Find(&students).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 	tx.Commit()
-
-	for _, s := range school.Students {
-		if s.Grade == grade {
-			students = append(students, s)
-		}
-	}
-
-	return students, nil
+	return &students, nil
 }
 
 //学校から生徒のリストを取得する関数
-func (m Model) GetStudentbyGrade(grade string) ([]Student, error) {
+func (m Model) GetStudentbyGrade(grade string) (*[]Student, error) {
 	var students []Student
 	tx := m.Db.Preload("RestDates").Begin()
 	if err := tx.Where("Grade = ?", grade).Find(&students).Error; err != nil {
@@ -30,7 +22,7 @@ func (m Model) GetStudentbyGrade(grade string) ([]Student, error) {
 		return nil, err
 	}
 	tx.Commit()
-	return students, nil
+	return &students, nil
 }
 
 //IDから生徒情報取得
@@ -47,6 +39,7 @@ func (m Model) GetStudentbyID(id uuid.UUID) (*Student, error) {
 
 //生徒情報の登録
 func (m Model) CreateStudent(student *Student) error {
+	student.ID = uuid.New()
 	student.Name = student.LastName + student.FirstName
 	tx := m.Db.Begin()
 	if err := tx.Create(student).Error; err != nil {

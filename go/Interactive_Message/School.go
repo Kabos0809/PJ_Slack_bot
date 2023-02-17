@@ -34,3 +34,32 @@ func SchoolButtonPushedActionHandle() slack.MsgOption {
 
 	return blocks
 }
+
+func AddSchoolModalHandle() *slack.ModalViewRequest {
+	dstText := slack.NewTextBlockObject("mrkdwn", "*学校*を追加します", false, false)
+	dstTextSection := slack.NewSectionBlock(dstText, nil, nil)
+
+	dividerBlock := slack.NewDividerBlock()
+
+	schoolText := slack.NewTextBlockObject("plain_text", "学校名を入力してください", false, false)
+	schoolNameInputElement := slack.NewPlainTextInputBlockElement(nil, addSchool)
+	schoolNameInput := slack.NewInputBlock(addSchool, schoolText, nil, schoolNameInputElement)
+
+	blocks := slack.Blocks{
+		BlockSet: []slack.Block{
+			dstTextSection,
+			dividerBlock,
+			schoolNameInput,
+		},
+	}
+
+	modal := slack.ModalViewRequest{
+		Type: slack.ViewType("modal"),
+		Title: slack.NewTextBlockObject("plain_text", "学校追加", false, false),
+		Close: slack.NewTextBlockObject("plain_text", "Cancel", false, false),
+		Submit: slack.NewTextBlockObject("plain_text", "Submit", false, false),
+		Blocks: blocks,
+	}
+
+	return &modal
+}

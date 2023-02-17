@@ -27,6 +27,7 @@ func (m Model) GetSchoolbyID(id uuid.UUID) (*School, error) {
 
 func (m Model) AddSchool(school *School) error {
 	tx := m.Db.Begin()
+	school.ID = uuid.New()
 	if err := tx.Create(school).Error; err != nil {
 		tx.Rollback()
 		return err
